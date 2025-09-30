@@ -1,0 +1,504 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Escape Room Dashboard</title>
+    <style>
+        body {
+            line-height: 1.6;
+            margin: 0;
+            padding: 20px;
+            background-color: #f4f4f4;
+            font-family: Arial, sans-serif;
+        }
+        .container {
+            max-width: 1200px;
+            margin: auto;
+            background: white;
+            padding: 20px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+            border-radius: 8px;
+        }
+        h1, h2 {
+            text-align: center;
+        }
+        h1 {
+            color: #9c27b0;
+            margin-bottom: 30px;
+        }
+        .pages-container {
+            display: flex;
+            justify-content: space-between;
+            gap: 20px;
+        }
+        .page-editor {
+            width: 48%;
+            margin-bottom: 20px;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            background-color: #fafafa;
+        }
+        .page-editor h2 {
+            margin-top: 0;
+            color: #333;
+            border-bottom: 2px solid #9c27b0;
+            padding-bottom: 10px;
+        }
+        input, textarea {
+            width: 100%;
+            padding: 8px;
+            margin-bottom: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            box-sizing: border-box;
+            font-family: inherit;
+        }
+        input:focus, textarea:focus {
+            outline: none;
+            border-color: #9c27b0;
+            box-shadow: 0 0 5px rgba(156, 39, 176, 0.3);
+        }
+        textarea {
+            height: 100px;
+            resize: vertical;
+        }
+        .navigation {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin: 20px 0;
+            padding: 15px;
+            background-color: #f8f9fa;
+            border-radius: 5px;
+        }
+        .button-row {
+            display: flex;
+            gap: 10px;
+            margin: 20px 0;
+            flex-wrap: wrap;
+        }
+        button {
+            padding: 12px 20px;
+            background-color: #9c27b0;
+            color: white;
+            border: none;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            flex: 1;
+            min-width: 150px;
+        }
+        button:hover {
+            background-color: #7b1fa2;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+        }
+        button:disabled {
+            background-color: #ccc;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+        #saveToServerButton {
+            background-color: #28a745;
+            font-weight: bold;
+        }
+        #saveToServerButton:hover {
+            background-color: #218838;
+        }
+        #saveToServerButton.unsaved {
+            background-color: #ffc107;
+            color: #212529;
+        }
+        #saveToServerButton.unsaved:hover {
+            background-color: #e0a800;
+        }
+        #importFromFileButton {
+            background-color: #17a2b8;
+        }
+        #importFromFileButton:hover {
+            background-color: #138496;
+        }
+        #importFromUrlButton {
+            background-color: #6f42c1;
+        }
+        #importFromUrlButton:hover {
+            background-color: #5a32a3;
+        }
+        #generateJsonButton, #downloadJsonButton {
+            display: block;
+            width: 100%;
+            margin-top: 20px;
+            min-width: auto;
+        }
+        #downloadJsonButton {
+            background-color: #fd7e14;
+        }
+        #downloadJsonButton:hover {
+            background-color: #e8690b;
+        }
+        #jsonOutput {
+            width: 100%;
+            height: 300px;
+            margin-top: 20px;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            background-color: #f8f9fa;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            padding: 10px;
+            box-sizing: border-box;
+        }
+        .status-indicator {
+            padding: 15px;
+            margin: 15px 0;
+            border-radius: 5px;
+            display: none;
+            font-weight: 500;
+        }
+        .status-success {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        .status-error {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        .status-warning {
+            background-color: #fff3cd;
+            color: #856404;
+            border: 1px solid #ffeaa7;
+        }
+        .status-info {
+            background-color: #d1ecf1;
+            color: #0c5460;
+            border: 1px solid #bee5eb;
+        }
+        .page-info {
+            font-weight: bold;
+            color: #9c27b0;
+            font-size: 16px;
+        }
+        @media (max-width: 768px) {
+            .pages-container {
+                flex-direction: column;
+            }
+            .page-editor {
+                width: 100%;
+            }
+            .button-row {
+                flex-direction: column;
+            }
+            button {
+                min-width: auto;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎮 Escape Room Dashboard</h1>
+        
+        <div id="statusIndicator" class="status-indicator"></div>
+        
+        <div class="button-row">
+            <button id="importFromFileButton">📁 Import from File</button>
+            <button id="importFromUrlButton">🔄 Reload from Server</button>
+            <button id="saveToServerButton">💾 Save to Server</button>
+        </div>
+        
+        <div id="pagesContainer" class="pages-container"></div>
+        
+        <div class="navigation">
+            <button id="prevButton">⬅️ Previous</button>
+            <span id="pageInfo" class="page-info"></span>
+            <button id="nextButton">Next ➡️</button>
+        </div>
+        
+        <button id="generateJsonButton">📋 Generate Updated JSON</button>
+        <button id="downloadJsonButton" style="display: none;">⬇️ Download JSON File</button>
+        
+        <h4>Updated JSON Data</h4>
+        <textarea id="jsonOutput" readonly placeholder="Generated JSON will appear here..."></textarea>
+    </div>
+
+    <script>
+        let jsonData = null;
+        let currentBlock = 0;
+        let hasUnsavedChanges = false;
+        
+        const pagesContainer = document.getElementById('pagesContainer');
+        const prevButton = document.getElementById('prevButton');
+        const nextButton = document.getElementById('nextButton');
+        const pageInfo = document.getElementById('pageInfo');
+        const generateJsonButton = document.getElementById('generateJsonButton');
+        const downloadJsonButton = document.getElementById('downloadJsonButton');
+        const jsonOutput = document.getElementById('jsonOutput');
+        const statusIndicator = document.getElementById('statusIndicator');
+        const saveToServerButton = document.getElementById('saveToServerButton');
+        const importFromFileButton = document.getElementById('importFromFileButton');
+        const importFromUrlButton = document.getElementById('importFromUrlButton');
+
+        function showStatus(message, type = 'info') {
+            statusIndicator.textContent = message;
+            statusIndicator.className = `status-indicator status-${type}`;
+            statusIndicator.style.display = 'block';
+            
+            // Auto-hide success messages after 5 seconds
+            if (type === 'success') {
+                setTimeout(() => {
+                    statusIndicator.style.display = 'none';
+                }, 5000);
+            }
+        }
+
+        function updateUnsavedStatus() {
+            hasUnsavedChanges = true;
+            saveToServerButton.textContent = '💾 Save to Server *';
+            saveToServerButton.classList.add('unsaved');
+        }
+
+        function clearUnsavedStatus() {
+            hasUnsavedChanges = false;
+            saveToServerButton.textContent = '💾 Save to Server';
+            saveToServerButton.classList.remove('unsaved');
+        }
+
+        async function saveToServer() {
+            if (!jsonData) {
+                showStatus('No data to save', 'warning');
+                return;
+            }
+            
+            updateJsonData(); // Ensure we have the latest data
+            
+            saveToServerButton.disabled = true;
+            const originalText = saveToServerButton.textContent;
+            saveToServerButton.textContent = '💾 Saving...';
+            
+            try {
+                const response = await fetch('save-json.php', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(jsonData)
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    showStatus(`✅ Saved successfully! ${result.pages_count} pages updated at ${result.timestamp}`, 'success');
+                    clearUnsavedStatus();
+                } else {
+                    throw new Error(result.error || 'Unknown server error');
+                }
+                
+            } catch (error) {
+                console.error('Save error:', error);
+                showStatus(`❌ Save failed: ${error.message}`, 'error');
+            } finally {
+                saveToServerButton.disabled = false;
+                saveToServerButton.textContent = hasUnsavedChanges ? '💾 Save to Server *' : '💾 Save to Server';
+            }
+        }
+
+        function fetchDataFromUrl() {
+            showStatus('Loading data from server...', 'info');
+            
+            fetch('JSON/escapedata.json')
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    jsonData = data;
+                    currentBlock = 0; // Reset to first page
+                    renderCurrentBlock();
+                    clearUnsavedStatus();
+                    showStatus('✅ Data loaded successfully from server', 'success');
+                })
+                .catch(error => {
+                    console.error('Error fetching JSON:', error);
+                    showStatus(`❌ Failed to load data from server: ${error.message}`, 'error');
+                });
+        }
+
+        function renderCurrentBlock() {
+            if (!jsonData || !jsonData.pages) {
+                showStatus('No valid data to display', 'warning');
+                return;
+            }
+
+            const totalPages = jsonData.pages.length;
+            const startPage = currentBlock * 2;
+            const endPage = Math.min(startPage + 2, totalPages);
+
+            pagesContainer.innerHTML = '';
+            
+            if (totalPages === 0) {
+                pagesContainer.innerHTML = '<p>No pages found in the data.</p>';
+                return;
+            }
+
+            for (let i = startPage; i < endPage; i++) {
+                pagesContainer.appendChild(createPageEditor(jsonData.pages[i], i));
+            }
+
+            pageInfo.textContent = `Pages ${startPage + 1}-${endPage} of ${totalPages}`;
+            prevButton.disabled = currentBlock === 0;
+            nextButton.disabled = endPage >= totalPages;
+            
+            // Add change listeners to detect edits
+            addChangeListeners();
+        }
+
+        function addChangeListeners() {
+            const inputs = pagesContainer.querySelectorAll('input, textarea');
+            inputs.forEach(input => {
+                input.addEventListener('input', updateUnsavedStatus);
+            });
+        }
+
+        function createPageEditor(page, index) {
+            const editor = document.createElement('div');
+            editor.className = 'page-editor';
+            editor.innerHTML = `
+                <h2>📄 Page ${page.pageNumber || (index + 1)}</h2>
+                <input type="text" id="kop-${index}" placeholder="Header (Kop)" value="${page.kop || ''}">
+                <textarea id="bodyTxt-${index}" placeholder="Body Text">${page.bodyTxt || ''}</textarea>
+                <input type="text" id="correctAnswer-${index}" placeholder="Correct Answer" value="${page.correctAnswer || ''}">
+                <input type="text" id="hint-${index}-0" placeholder="Hint 1" value="${(page.hints && page.hints[0]) || ''}">
+                <input type="text" id="hint-${index}-1" placeholder="Hint 2" value="${(page.hints && page.hints[1]) || ''}">
+                <input type="text" id="hint-${index}-2" placeholder="Hint 3" value="${(page.hints && page.hints[2]) || ''}">
+                <input type="text" id="hint-${index}-3" placeholder="Hint 4" value="${(page.hints && page.hints[3]) || ''}">
+                <input type="text" id="nextPage-${index}" placeholder="Next Page URL" value="${page.nextPage || ''}">
+            `;
+            return editor;
+        }
+
+        function updateJsonData() {
+            if (!jsonData || !jsonData.pages) return;
+            
+            jsonData.pages.forEach((page, i) => {
+                const kopElement = document.getElementById(`kop-${i}`);
+                const bodyTxtElement = document.getElementById(`bodyTxt-${i}`);
+                const correctAnswerElement = document.getElementById(`correctAnswer-${i}`);
+                const nextPageElement = document.getElementById(`nextPage-${i}`);
+
+                if (kopElement) page.kop = kopElement.value;
+                if (bodyTxtElement) page.bodyTxt = bodyTxtElement.value;
+                if (correctAnswerElement) page.correctAnswer = correctAnswerElement.value;
+                if (nextPageElement) page.nextPage = nextPageElement.value;
+
+                // Update hints
+                const newHints = [0, 1, 2, 3]
+                    .map(hintIndex => {
+                        const hintElement = document.getElementById(`hint-${i}-${hintIndex}`);
+                        return hintElement ? hintElement.value : '';
+                    })
+                    .filter(hint => hint.trim() !== '');
+                
+                page.hints = newHints;
+            });
+        }
+
+        function downloadJsonFile() {
+            updateJsonData();
+            const jsonString = JSON.stringify(jsonData, null, 2);
+            const blob = new Blob([jsonString], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'escapedata.json';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+            
+            showStatus('📁 JSON file downloaded to your computer', 'info');
+        }
+
+        function importJsonFromFile() {
+            const input = document.createElement('input');
+            input.type = 'file';
+            input.accept = 'application/json';
+            input.onchange = function(event) {
+                const file = event.target.files[0];
+                if (!file) return;
+                
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    try {
+                        const data = JSON.parse(e.target.result);
+                        if (!data.pages || !Array.isArray(data.pages)) {
+                            throw new Error('Invalid JSON structure - missing pages array');
+                        }
+                        jsonData = data;
+                        currentBlock = 0;
+                        renderCurrentBlock();
+                        updateUnsavedStatus();
+                        showStatus('✅ JSON imported from file - remember to save to server!', 'warning');
+                    } catch (error) {
+                        console.error('Error parsing JSON:', error);
+                        showStatus(`❌ Failed to parse JSON file: ${error.message}`, 'error');
+                    }
+                };
+                reader.readAsText(file);
+            };
+            input.click();
+        }
+
+        // Warn before leaving with unsaved changes
+        window.addEventListener('beforeunload', (e) => {
+            if (hasUnsavedChanges) {
+                e.preventDefault();
+                e.returnValue = 'You have unsaved changes. Are you sure you want to leave?';
+            }
+        });
+
+        // Event listeners
+        prevButton.addEventListener('click', () => {
+            if (currentBlock > 0) {
+                updateJsonData();
+                currentBlock--;
+                renderCurrentBlock();
+            }
+        });
+
+        nextButton.addEventListener('click', () => {
+            if ((currentBlock + 1) * 2 < jsonData.pages.length) {
+                updateJsonData();
+                currentBlock++;
+                renderCurrentBlock();
+            }
+        });
+
+        generateJsonButton.addEventListener('click', () => {
+            updateJsonData();
+            const jsonString = JSON.stringify(jsonData, null, 2);
+            jsonOutput.value = jsonString;
+            console.log('Updated JSON:', jsonString);
+            downloadJsonButton.style.display = 'block';
+            showStatus('📋 JSON generated in textarea below', 'info');
+        });
+
+        downloadJsonButton.addEventListener('click', downloadJsonFile);
+        importFromFileButton.addEventListener('click', importJsonFromFile);
+        importFromUrlButton.addEventListener('click', fetchDataFromUrl);
+        saveToServerButton.addEventListener('click', saveToServer);
+
+        // Initialize - load data on page load
+        fetchDataFromUrl();
+    </script>
+</body>
+</html>
