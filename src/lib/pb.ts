@@ -51,8 +51,8 @@ export async function fetchEscapeData(): Promise<EscapeData | null> {
   const pb = getPB();
   try {
     const record = await pb.collection('escape_game_data').getFirstListItem('team_name="MASTER_DASHBOARD"');
-    // The data is stored as a JSON string in the 'body' field (using available fields in the collection)
-    return JSON.parse(record.body) as EscapeData;
+    // The data is stored as a JSON string in the 'gamedata' field
+    return JSON.parse(record.gamedata) as EscapeData;
   } catch (err) {
     console.error('PB Fetch Failed:', err);
     return null;
@@ -66,7 +66,7 @@ export async function saveEscapeData(data: EscapeData): Promise<boolean> {
   const pb = getPB();
   const payload = {
     team_name: "MASTER_DASHBOARD",
-    body: JSON.stringify(data),
+    gamedata: JSON.stringify(data),
     nr_teams: 1, // dummy value
     city: "all", // dummy value
     total_time: Date.now()
