@@ -21,7 +21,7 @@ async function seed() {
   
   const payload = {
     team_name: "MASTER_DASHBOARD",
-    gamedata: JSON.stringify(data),
+    gamedata: data,
     nr_teams: 1,
     city: "all",
     total_time: Date.now()
