@@ -1,0 +1,992 @@
+{
+  "city": {
+    "locations": [
+      {
+        "locationNumber": 1,
+        "name": "Blokker",
+        "heading": "Dit is nu de juiste button",
+        "subheading": "lekker snel geprogrammeerd",
+        "body": "dit gaat nergens over",
+        "startUrl": "https://www.pinkmilkgames.nl/blokkerPB01/"
+      },
+      {
+        "locationNumber": 2,
+        "name": "Boek",
+        "heading": "",
+        "subheading": "",
+        "body": "",
+        "startUrl": "https://www.pinkmilkgames.nl/bookPB01/"
+      },
+      {
+        "locationNumber": 3,
+        "name": "Electro",
+        "heading": "",
+        "subheading": "",
+        "body": "",
+        "startUrl": "https://www.pinkmilkgames.nl/electroPB01/"
+      },
+      {
+        "locationNumber": 4,
+        "name": "Lijst",
+        "heading": "",
+        "subheading": "",
+        "body": "",
+        "startUrl": "https://www.pinkmilkgames.nl/lijstPB01/"
+      },
+      {
+        "locationNumber": 5,
+        "name": "Kerk",
+        "heading": "",
+        "subheading": "",
+        "body": "",
+        "startUrl": "https://www.pinkmilkgames.nl/kerkPB01/"
+      },
+      {
+        "locationNumber": 6,
+        "name": "Brug",
+        "heading": "",
+        "subheading": "",
+        "body": "",
+        "startUrl": "https://www.pinkmilkgames.nl/brugPB01/"
+      },
+      {
+        "locationNumber": 7,
+        "name": "Count",
+        "heading": "",
+        "subheading": "",
+        "body": "",
+        "startUrl": "https://www.pinkmilkgames.nl/countPB01/"
+      },
+      {
+        "locationNumber": 8,
+        "name": "Gall",
+        "heading": "",
+        "subheading": "",
+        "body": "",
+        "startUrl": "https://www.pinkmilkgames.nl/gallPB01/"
+      },
+      {
+        "locationNumber": 9,
+        "name": "Drog",
+        "heading": "",
+        "subheading": "",
+        "body": "",
+        "startUrl": "https://www.pinkmilkgames.nl/drogPB01/"
+      }
+    ],
+    "pages": [
+      {
+        "pageNumber": 1,
+        "locationNumber": 1,
+        "kop": "Tesla heeft een auto gemaakt van driehoeken",
+        "bodyTxt": "Maar hoe heet die eigenlijk?",
+        "correctAnswer": "cybertruck",
+        "hints": [
+          "En je mag gewoon googlen",
+          "het is een pickup truck",
+          "Elon is gek van Cyber",
+          "cybertruck"
+        ],
+        "nextPage": "https://www.pinkmilkgames.nl/blokkerPB02/"
+      },
+      {
+        "pageNumber": 2,
+        "locationNumber": 1,
+        "kop": "Open nu de puzzel 'Drie oh Drie'",
+        "bodyTxt": "Dat doe je met code 168. Hoeveel driehoeken tel je?",
+        "correctAnswer": "44",
+        "hints": [
+          "Archeringen [streepjes patroon] tellen niet mee",
+          "Het is een laag getal ",
+          "Minder dan 48",
+          "Meer dan 42"
+        ],
+        "nextPage": "https://www.pinkmilkgames.nl/toka/"
+      },
+      {
+        "pageNumber": 3,
+        "locationNumber": 2,
+        "kop": "Plattegrond in de boekwinkel",
+        "bodyTxt": "De vraag was hoeveel DM2 is deze prachtige WC?",
+        "correctAnswer": "600",
+        "hints": [
+          "Let op, het gaat om Decimeters",
+          "van Meters naar Decimeters is factor 10",
+          "Kijk goed naar de andere ruimtes ",
+          "probeer 600"
+        ],
+        "nextPage": "https://www.pinkmilkgames.nl/bookPB02"
+      },
+      {
+        "pageNumber": 4,
+        "locationNumber": 2,
+        "kop": "De roman",
+        "bodyTxt": "Er ligt hier ergens een boekje verstopt. Los de puzzel daarmee op!",
+        "correctAnswer": "paypal",
+        "hints": [
+          "Kijk goed op alle bladzijden",
+          "Daar zie je letters - die er niet horen...",
+          "welk woord kan je daarmee maken? ",
+          "Bedrijf van elon musk: paypal"
+        ],
+        "nextPage": "https://www.pinkmilkgames.nl/toke/"
+      },
+      {
+        "pageNumber": 5,
+        "locationNumber": 3,
+        "kop": "Zoek het technische schema",
+        "bodyTxt": "In deze ruimte is er ergens een technisch schema. Zoek het en los het op.\nMaar eerst: Hoe oud was Elon toen hij zijn eerste bedrijf verkocht?",
+        "correctAnswer": "27",
+        "hints": [
+          "Samen met zijn broer Kimbal",
+          "Het bedrijf heette: Zip2",
+          "Verkocht hij voor veel geld aan Compaq ",
+          "hij was iets ouder dan jullie; 27"
+        ],
+        "nextPage": "https://www.pinkmilkgames.nl/electroPB02/"
+      },
+      {
+        "pageNumber": 6,
+        "locationNumber": 3,
+        "kop": "Het technische schema",
+        "bodyTxt": "Volg de Plus naar de min en verzamel de letters. \nWelk specifiek woord zoeken we?",
+        "correctAnswer": "robots",
+        "hints": [
+          "Wat zijn mechanische mensen",
+          "Door AI worden ze steeds slimmer ",
+          "Elon heeft de TESLABOTS",
+          "robots"
+        ],
+        "nextPage": "https://www.pinkmilkgames.nl/tokh/"
+      },
+      {
+        "pageNumber": 7,
+        "locationNumber": 4,
+        "kop": "Wat is het Engelse woord voor Fotolijst?",
+        "bodyTxt": "Dat mag je best opzoeken...",
+        "correctAnswer": "frame",
+        "hints": [
+          "Het begint met een F",
+          "je kan ook ge.....mt worden! dan ben je erbij.",
+          "Het lijkt op FAME ",
+          "frame"
+        ],
+        "nextPage": "https://www.pinkmilkgames.nl/lijstPB02/"
+      },
+      {
+        "pageNumber": 8,
+        "locationNumber": 4,
+        "kop": "Los de wissellijst op",
+        "bodyTxt": "En maak een selfie van de hele groep ",
+        "correctAnswer": "elon",
+        "hints": [
+          "Wie moet gestopt worden?",
+          "kijk ook eens op de achterzijde ",
+          "Binnenin zit er meer...",
+          "Voornaam baas van Tesla..."
+        ],
+        "nextPage": "https://www.pinkmilkgames.nl/tokr/"
+      },
+      {
+        "pageNumber": 9,
+        "locationNumber": 5,
+        "kop": "Zoek naar een  klein, leren mapje in deze ruimte",
+        "bodyTxt": "En maak dit mapje en de volgend pagina open met: 517",
+        "correctAnswer": "517",
+        "hints": [
+          "het is zwart",
+          "met zilveren klinknagels ",
+          "Kan niet missen",
+          "Probeer overal"
+        ],
+        "nextPage": "https://www.pinkmilkgames.nl/kerkPB02/"
+      },
+      {
+        "pageNumber": 10,
+        "locationNumber": 5,
+        "kop": "Los de puzzel op...",
+        "bodyTxt": " En typ het juiste zinnetje in ",
+        "correctAnswer": "musk must stop",
+        "hints": [
+          "Tap met je telefoon tegen het kaartje",
+          "Het is net als een bankpasje",
+          "Goed opletten - anders moet je het nog een keer doen",
+          "type in:  www.pinkmilk.eu/woord/woord.html"
+        ],
+        "nextPage": "https://www.pinkmilkgames.nl/tokl/"
+      },
+      {
+        "pageNumber": 11,
+        "locationNumber": 6,
+        "kop": "Er zit bij Elon een schimmel in zijn hoofd",
+        "bodyTxt": "Hoe heet deze schimmel?  [ die ook in de TV serie 'The Last of Us' wordt gebruikt.]",
+        "correctAnswer": "Cordyceps",
+        "hints": [
+          "Zonder ",
+          "Ook weer even goed googlen....",
+          "Niet best als je deze schimmel hebt ",
+          "(Ophio)cordyceps"
+        ],
+        "nextPage": "https://www.pinkmilkgames.nl/brugPB02/"
+      },
+      {
+        "pageNumber": 12,
+        "locationNumber": 6,
+        "kop": "Een boutje en een moertje",
+        "bodyTxt": "Los deze puzzel op en vul het juiste getal hier in",
+        "correctAnswer": "22",
+        "hints": [
+          "Geen moertje ... wel een bout....",
+          "Gewoon even openen....",
+          "Vermenigvuldigen en delen hebben voorrang boven optellen en aftrekken.",
+          "Het is dan natuurlijk 22"
+        ],
+        "nextPage": "https://www.pinkmilkgames.nl/toko/"
+      },
+      {
+        "pageNumber": 13,
+        "locationNumber": 7,
+        "kop": "Tesla in Space",
+        "bodyTxt": "Welke Tesla schoot Elon de ruimte in? En hij gaat nog steeds als een raket.",
+        "correctAnswer": "Roadstar",
+        "hints": [
+          "In 2018 schoot Elon een auto de ruimte in ",
+          "Zoek het maar op ",
+          "Er zat ook een Pop ",
+          "Roadstar "
+        ],
+        "nextPage": "https://www.pinkmilkgames.nl/countPB02/"
+      },
+      {
+        "pageNumber": 14,
+        "locationNumber": 7,
+        "kop": "Open de Magic Number puzzel",
+        "bodyTxt": "Gebruik 768. Leg alle cijfers zo dat horizontaal, verticaal en diagonaal opgeteld hetzelfde is",
+        "correctAnswer": "72",
+        "hints": [
+          "minder dan 80 ",
+          "meer dan 70 ",
+          "lager dan 75",
+          "72"
+        ],
+        "nextPage": "https://www.pinkmilkgames.nl/tokt/"
+      },
+      {
+        "pageNumber": 15,
+        "locationNumber": 8,
+        "kop": "Op welk nummer staat Elons favoriete letter in het alfabet?",
+        "bodyTxt": "Hij heeft zelfs een kind met die naam...",
+        "correctAnswer": "24",
+        "hints": [
+          "ga maar tellen ",
+          "Je zit in de buurt ",
+          "het zijn twee cijfers",
+          "X = letter 24 in het alfabet"
+        ],
+        "nextPage": "https://www.pinkmilkgames.nl/gallPB02/"
+      },
+      {
+        "pageNumber": 16,
+        "locationNumber": 8,
+        "kop": "Open de fles",
+        "bodyTxt": "Twee cijfers heb je al. Nu nog 1",
+        "correctAnswer": "boring",
+        "hints": [
+          "Maak het Tesla logo op de achterkant kloppend",
+          "Op de voorzijde staat binaire code ",
+          "b = 00010 ",
+          "Jullie zijn zo "
+        ],
+        "nextPage": "https://www.pinkmilkgames.nl/tokm/"
+      },
+      {
+        "pageNumber": 17,
+        "locationNumber": 9,
+        "kop": "Hoe noemen we de kaart [tafel] van alle ",
+        "bodyTxt": "Hierin staan alle bouwstenen [atomen] van alles wat je om je heen ziet",
+        "correctAnswer": "periodiek systeem",
+        "hints": [
+          "het is geen stoel",
+          "het is een systeem",
+          "periodiek",
+          "Het is dus het periodiek systeem"
+        ],
+        "nextPage": "https://www.pinkmilkgames.nl/drogPB02/"
+      },
+      {
+        "pageNumber": 18,
+        "locationNumber": 9,
+        "kop": "Los nu de radioactieve vraag op",
+        "bodyTxt": "Hint: Wat is de droom van Elon, 7 letters zonder spaties?",
+        "correctAnswer": "nohuman",
+        "hints": [
+          "Je ziet in de text 'elementen'...",
+          "Gebruik de juiste afkortingen uit het periodiek systeem",
+          "Waterstof = H",
+          "nohuman"
+        ],
+        "nextPage": "https://www.pinkmilkgames.nl/tokw/"
+      }
+    ]
+  },
+  "diner": {
+    "locations": [
+      {
+        "locationNumber": 1,
+        "name": "Blokker",
+        "heading": "Dit is nu de juiste button",
+        "subheading": "lekker snel geprogrammeerd",
+        "body": "dit gaat nergens over",
+        "startUrl": "https://www.pinkmilkgames.nl/blokkerPB01/"
+      },
+      {
+        "locationNumber": 2,
+        "name": "Boek",
+        "heading": "",
+        "subheading": "",
+        "body": "",
+        "startUrl": "https://www.pinkmilkgames.nl/bookPB01/"
+      },
+      {
+        "locationNumber": 3,
+        "name": "Electro",
+        "heading": "",
+        "subheading": "",
+        "body": "",
+        "startUrl": "https://www.pinkmilkgames.nl/electroPB01/"
+      },
+      {
+        "locationNumber": 4,
+        "name": "Lijst",
+        "heading": "",
+        "subheading": "",
+        "body": "",
+        "startUrl": "https://www.pinkmilkgames.nl/lijstPB01/"
+      },
+      {
+        "locationNumber": 5,
+        "name": "Kerk",
+        "heading": "",
+        "subheading": "",
+        "body": "",
+        "startUrl": "https://www.pinkmilkgames.nl/kerkPB01/"
+      },
+      {
+        "locationNumber": 6,
+        "name": "Brug",
+        "heading": "",
+        "subheading": "",
+        "body": "",
+        "startUrl": "https://www.pinkmilkgames.nl/brugPB01/"
+      },
+      {
+        "locationNumber": 7,
+        "name": "Count",
+        "heading": "",
+        "subheading": "",
+        "body": "",
+        "startUrl": "https://www.pinkmilkgames.nl/countPB01/"
+      },
+      {
+        "locationNumber": 8,
+        "name": "Gall",
+        "heading": "",
+        "subheading": "",
+        "body": "",
+        "startUrl": "https://www.pinkmilkgames.nl/gallPB01/"
+      },
+      {
+        "locationNumber": 9,
+        "name": "Drog",
+        "heading": "",
+        "subheading": "",
+        "body": "",
+        "startUrl": "https://www.pinkmilkgames.nl/drogPB01/"
+      }
+    ],
+    "pages": [
+      {
+        "pageNumber": 1,
+        "locationNumber": 1,
+        "kop": "Tesla heeft een auto gemaakt van driehoeken",
+        "bodyTxt": "Maar hoe heet die eigenlijk?",
+        "correctAnswer": "cybertruck",
+        "hints": [
+          "En je mag gewoon googlen",
+          "het is een pickup truck",
+          "Elon is gek van Cyber",
+          "cybertruck"
+        ],
+        "nextPage": "https://www.pinkmilkgames.nl/blokkerPB02/"
+      },
+      {
+        "pageNumber": 2,
+        "locationNumber": 1,
+        "kop": "Open nu de puzzel 'Drie oh Drie'",
+        "bodyTxt": "Dat doe je met code 168. Hoeveel driehoeken tel je?",
+        "correctAnswer": "44",
+        "hints": [
+          "Archeringen [streepjes patroon] tellen niet mee",
+          "Het is een laag getal ",
+          "Minder dan 48",
+          "Meer dan 42"
+        ],
+        "nextPage": "https://www.pinkmilkgames.nl/toka/"
+      },
+      {
+        "pageNumber": 3,
+        "locationNumber": 2,
+        "kop": "Plattegrond in de boekwinkel",
+        "bodyTxt": "De vraag was hoeveel DM2 is deze prachtige WC?",
+        "correctAnswer": "600",
+        "hints": [
+          "Let op, het gaat om Decimeters",
+          "van Meters naar Decimeters is factor 10",
+          "Kijk goed naar de andere ruimtes ",
+          "probeer 600"
+        ],
+        "nextPage": "https://www.pinkmilkgames.nl/bookPB02"
+      },
+      {
+        "pageNumber": 4,
+        "locationNumber": 2,
+        "kop": "De roman",
+        "bodyTxt": "Er ligt hier ergens een boekje verstopt. Los de puzzel daarmee op!",
+        "correctAnswer": "paypal",
+        "hints": [
+          "Kijk goed op alle bladzijden",
+          "Daar zie je letters - die er niet horen...",
+          "welk woord kan je daarmee maken? ",
+          "Bedrijf van elon musk: paypal"
+        ],
+        "nextPage": "https://www.pinkmilkgames.nl/toke/"
+      },
+      {
+        "pageNumber": 5,
+        "locationNumber": 3,
+        "kop": "Zoek het technische schema",
+        "bodyTxt": "In deze ruimte is er ergens een technisch schema. Zoek het en los het op.\nMaar eerst: Hoe oud was Elon toen hij zijn eerste bedrijf verkocht?",
+        "correctAnswer": "27",
+        "hints": [
+          "Samen met zijn broer Kimbal",
+          "Het bedrijf heette: Zip2",
+          "Verkocht hij voor veel geld aan Compaq ",
+          "hij was iets ouder dan jullie; 27"
+        ],
+        "nextPage": "https://www.pinkmilkgames.nl/electroPB02/"
+      },
+      {
+        "pageNumber": 6,
+        "locationNumber": 3,
+        "kop": "Het technische schema",
+        "bodyTxt": "Volg de Plus naar de min en verzamel de letters. \nWelk specifiek woord zoeken we?",
+        "correctAnswer": "robots",
+        "hints": [
+          "Wat zijn mechanische mensen",
+          "Door AI worden ze steeds slimmer ",
+          "Elon heeft de TESLABOTS",
+          "robots"
+        ],
+        "nextPage": "https://www.pinkmilkgames.nl/tokh/"
+      },
+      {
+        "pageNumber": 7,
+        "locationNumber": 4,
+        "kop": "Wat is het Engelse woord voor Fotolijst?",
+        "bodyTxt": "Dat mag je best opzoeken...",
+        "correctAnswer": "frame",
+        "hints": [
+          "Het begint met een F",
+          "je kan ook ge.....mt worden! dan ben je erbij.",
+          "Het lijkt op FAME ",
+          "frame"
+        ],
+        "nextPage": "https://www.pinkmilkgames.nl/lijstPB02/"
+      },
+      {
+        "pageNumber": 8,
+        "locationNumber": 4,
+        "kop": "Los de wissellijst op",
+        "bodyTxt": "En maak een selfie van de hele groep ",
+        "correctAnswer": "elon",
+        "hints": [
+          "Wie moet gestopt worden?",
+          "kijk ook eens op de achterzijde ",
+          "Binnenin zit er meer...",
+          "Voornaam baas van Tesla..."
+        ],
+        "nextPage": "https://www.pinkmilkgames.nl/tokr/"
+      },
+      {
+        "pageNumber": 9,
+        "locationNumber": 5,
+        "kop": "Zoek naar een  klein, leren mapje in deze ruimte",
+        "bodyTxt": "En maak dit mapje en de volgend pagina open met: 517",
+        "correctAnswer": "517",
+        "hints": [
+          "het is zwart",
+          "met zilveren klinknagels ",
+          "Kan niet missen",
+          "Probeer overal"
+        ],
+        "nextPage": "https://www.pinkmilkgames.nl/kerkPB02/"
+      },
+      {
+        "pageNumber": 10,
+        "locationNumber": 5,
+        "kop": "Los de puzzel op...",
+        "bodyTxt": " En typ het juiste zinnetje in ",
+        "correctAnswer": "musk must stop",
+        "hints": [
+          "Tap met je telefoon tegen het kaartje",
+          "Het is net als een bankpasje",
+          "Goed opletten - anders moet je het nog een keer doen",
+          "type in:  www.pinkmilk.eu/woord/woord.html"
+        ],
+        "nextPage": "https://www.pinkmilkgames.nl/tokl/"
+      },
+      {
+        "pageNumber": 11,
+        "locationNumber": 6,
+        "kop": "Er zit bij Elon een schimmel in zijn hoofd",
+        "bodyTxt": "Hoe heet deze schimmel?  [ die ook in de TV serie 'The Last of Us' wordt gebruikt.]",
+        "correctAnswer": "Cordyceps",
+        "hints": [
+          "Zonder ",
+          "Ook weer even goed googlen....",
+          "Niet best als je deze schimmel hebt ",
+          "(Ophio)cordyceps"
+        ],
+        "nextPage": "https://www.pinkmilkgames.nl/brugPB02/"
+      },
+      {
+        "pageNumber": 12,
+        "locationNumber": 6,
+        "kop": "Een boutje en een moertje",
+        "bodyTxt": "Los deze puzzel op en vul het juiste getal hier in",
+        "correctAnswer": "22",
+        "hints": [
+          "Geen moertje ... wel een bout....",
+          "Gewoon even openen....",
+          "Vermenigvuldigen en delen hebben voorrang boven optellen en aftrekken.",
+          "Het is dan natuurlijk 22"
+        ],
+        "nextPage": "https://www.pinkmilkgames.nl/toko/"
+      },
+      {
+        "pageNumber": 13,
+        "locationNumber": 7,
+        "kop": "Tesla in Space",
+        "bodyTxt": "Welke Tesla schoot Elon de ruimte in? En hij gaat nog steeds als een raket.",
+        "correctAnswer": "Roadstar",
+        "hints": [
+          "In 2018 schoot Elon een auto de ruimte in ",
+          "Zoek het maar op ",
+          "Er zat ook een Pop ",
+          "Roadstar "
+        ],
+        "nextPage": "https://www.pinkmilkgames.nl/countPB02/"
+      },
+      {
+        "pageNumber": 14,
+        "locationNumber": 7,
+        "kop": "Open de Magic Number puzzel",
+        "bodyTxt": "Gebruik 768. Leg alle cijfers zo dat horizontaal, verticaal en diagonaal opgeteld hetzelfde is",
+        "correctAnswer": "72",
+        "hints": [
+          "minder dan 80 ",
+          "meer dan 70 ",
+          "lager dan 75",
+          "72"
+        ],
+        "nextPage": "https://www.pinkmilkgames.nl/tokt/"
+      },
+      {
+        "pageNumber": 15,
+        "locationNumber": 8,
+        "kop": "Op welk nummer staat Elons favoriete letter in het alfabet?",
+        "bodyTxt": "Hij heeft zelfs een kind met die naam...",
+        "correctAnswer": "24",
+        "hints": [
+          "ga maar tellen ",
+          "Je zit in de buurt ",
+          "het zijn twee cijfers",
+          "X = letter 24 in het alfabet"
+        ],
+        "nextPage": "https://www.pinkmilkgames.nl/gallPB02/"
+      },
+      {
+        "pageNumber": 16,
+        "locationNumber": 8,
+        "kop": "Open de fles",
+        "bodyTxt": "Twee cijfers heb je al. Nu nog 1",
+        "correctAnswer": "boring",
+        "hints": [
+          "Maak het Tesla logo op de achterkant kloppend",
+          "Op de voorzijde staat binaire code ",
+          "b = 00010 ",
+          "Jullie zijn zo "
+        ],
+        "nextPage": "https://www.pinkmilkgames.nl/tokm/"
+      },
+      {
+        "pageNumber": 17,
+        "locationNumber": 9,
+        "kop": "Hoe noemen we de kaart [tafel] van alle ",
+        "bodyTxt": "Hierin staan alle bouwstenen [atomen] van alles wat je om je heen ziet",
+        "correctAnswer": "periodiek systeem",
+        "hints": [
+          "het is geen stoel",
+          "het is een systeem",
+          "periodiek",
+          "Het is dus het periodiek systeem"
+        ],
+        "nextPage": "https://www.pinkmilkgames.nl/drogPB02/"
+      },
+      {
+        "pageNumber": 18,
+        "locationNumber": 9,
+        "kop": "Los nu de radioactieve vraag op",
+        "bodyTxt": "Hint: Wat is de droom van Elon, 7 letters zonder spaties?",
+        "correctAnswer": "nohuman",
+        "hints": [
+          "Je ziet in de text 'elementen'...",
+          "Gebruik de juiste afkortingen uit het periodiek systeem",
+          "Waterstof = H",
+          "nohuman"
+        ],
+        "nextPage": "https://www.pinkmilkgames.nl/tokw/"
+      }
+    ]
+  },
+  "rat": {
+    "locations": [
+      {
+        "locationNumber": 1,
+        "name": "Blokker",
+        "heading": "Dit is nu de juiste button",
+        "subheading": "lekker snel geprogrammeerd",
+        "body": "dit gaat nergens over",
+        "startUrl": "https://www.pinkmilkgames.nl/blokkerPB01/"
+      },
+      {
+        "locationNumber": 2,
+        "name": "Boek",
+        "heading": "",
+        "subheading": "",
+        "body": "",
+        "startUrl": "https://www.pinkmilkgames.nl/bookPB01/"
+      },
+      {
+        "locationNumber": 3,
+        "name": "Electro",
+        "heading": "",
+        "subheading": "",
+        "body": "",
+        "startUrl": "https://www.pinkmilkgames.nl/electroPB01/"
+      },
+      {
+        "locationNumber": 4,
+        "name": "Lijst",
+        "heading": "",
+        "subheading": "",
+        "body": "",
+        "startUrl": "https://www.pinkmilkgames.nl/lijstPB01/"
+      },
+      {
+        "locationNumber": 5,
+        "name": "Kerk",
+        "heading": "",
+        "subheading": "",
+        "body": "",
+        "startUrl": "https://www.pinkmilkgames.nl/kerkPB01/"
+      },
+      {
+        "locationNumber": 6,
+        "name": "Brug",
+        "heading": "",
+        "subheading": "",
+        "body": "",
+        "startUrl": "https://www.pinkmilkgames.nl/brugPB01/"
+      },
+      {
+        "locationNumber": 7,
+        "name": "Count",
+        "heading": "",
+        "subheading": "",
+        "body": "",
+        "startUrl": "https://www.pinkmilkgames.nl/countPB01/"
+      },
+      {
+        "locationNumber": 8,
+        "name": "Gall",
+        "heading": "",
+        "subheading": "",
+        "body": "",
+        "startUrl": "https://www.pinkmilkgames.nl/gallPB01/"
+      },
+      {
+        "locationNumber": 9,
+        "name": "Drog",
+        "heading": "",
+        "subheading": "",
+        "body": "",
+        "startUrl": "https://www.pinkmilkgames.nl/drogPB01/"
+      }
+    ],
+    "pages": [
+      {
+        "pageNumber": 1,
+        "locationNumber": 1,
+        "kop": "Tesla heeft een auto gemaakt van driehoeken",
+        "bodyTxt": "Maar hoe heet die eigenlijk?",
+        "correctAnswer": "cybertruck",
+        "hints": [
+          "En je mag gewoon googlen",
+          "het is een pickup truck",
+          "Elon is gek van Cyber",
+          "cybertruck"
+        ],
+        "nextPage": "https://www.pinkmilkgames.nl/blokkerPB02/"
+      },
+      {
+        "pageNumber": 2,
+        "locationNumber": 1,
+        "kop": "Open nu de puzzel 'Drie oh Drie'",
+        "bodyTxt": "Dat doe je met code 168. Hoeveel driehoeken tel je?",
+        "correctAnswer": "44",
+        "hints": [
+          "Archeringen [streepjes patroon] tellen niet mee",
+          "Het is een laag getal ",
+          "Minder dan 48",
+          "Meer dan 42"
+        ],
+        "nextPage": "https://www.pinkmilkgames.nl/toka/"
+      },
+      {
+        "pageNumber": 3,
+        "locationNumber": 2,
+        "kop": "Plattegrond in de boekwinkel",
+        "bodyTxt": "De vraag was hoeveel DM2 is deze prachtige WC?",
+        "correctAnswer": "600",
+        "hints": [
+          "Let op, het gaat om Decimeters",
+          "van Meters naar Decimeters is factor 10",
+          "Kijk goed naar de andere ruimtes ",
+          "probeer 600"
+        ],
+        "nextPage": "https://www.pinkmilkgames.nl/bookPB02"
+      },
+      {
+        "pageNumber": 4,
+        "locationNumber": 2,
+        "kop": "De roman",
+        "bodyTxt": "Er ligt hier ergens een boekje verstopt. Los de puzzel daarmee op!",
+        "correctAnswer": "paypal",
+        "hints": [
+          "Kijk goed op alle bladzijden",
+          "Daar zie je letters - die er niet horen...",
+          "welk woord kan je daarmee maken? ",
+          "Bedrijf van elon musk: paypal"
+        ],
+        "nextPage": "https://www.pinkmilkgames.nl/toke/"
+      },
+      {
+        "pageNumber": 5,
+        "locationNumber": 3,
+        "kop": "Zoek het technische schema",
+        "bodyTxt": "In deze ruimte is er ergens een technisch schema. Zoek het en los het op.\nMaar eerst: Hoe oud was Elon toen hij zijn eerste bedrijf verkocht?",
+        "correctAnswer": "27",
+        "hints": [
+          "Samen met zijn broer Kimbal",
+          "Het bedrijf heette: Zip2",
+          "Verkocht hij voor veel geld aan Compaq ",
+          "hij was iets ouder dan jullie; 27"
+        ],
+        "nextPage": "https://www.pinkmilkgames.nl/electroPB02/"
+      },
+      {
+        "pageNumber": 6,
+        "locationNumber": 3,
+        "kop": "Het technische schema",
+        "bodyTxt": "Volg de Plus naar de min en verzamel de letters. \nWelk specifiek woord zoeken we?",
+        "correctAnswer": "robots",
+        "hints": [
+          "Wat zijn mechanische mensen",
+          "Door AI worden ze steeds slimmer ",
+          "Elon heeft de TESLABOTS",
+          "robots"
+        ],
+        "nextPage": "https://www.pinkmilkgames.nl/tokh/"
+      },
+      {
+        "pageNumber": 7,
+        "locationNumber": 4,
+        "kop": "Wat is het Engelse woord voor Fotolijst?",
+        "bodyTxt": "Dat mag je best opzoeken...",
+        "correctAnswer": "frame",
+        "hints": [
+          "Het begint met een F",
+          "je kan ook ge.....mt worden! dan ben je erbij.",
+          "Het lijkt op FAME ",
+          "frame"
+        ],
+        "nextPage": "https://www.pinkmilkgames.nl/lijstPB02/"
+      },
+      {
+        "pageNumber": 8,
+        "locationNumber": 4,
+        "kop": "Los de wissellijst op",
+        "bodyTxt": "En maak een selfie van de hele groep ",
+        "correctAnswer": "elon",
+        "hints": [
+          "Wie moet gestopt worden?",
+          "kijk ook eens op de achterzijde ",
+          "Binnenin zit er meer...",
+          "Voornaam baas van Tesla..."
+        ],
+        "nextPage": "https://www.pinkmilkgames.nl/tokr/"
+      },
+      {
+        "pageNumber": 9,
+        "locationNumber": 5,
+        "kop": "Zoek naar een  klein, leren mapje in deze ruimte",
+        "bodyTxt": "En maak dit mapje en de volgend pagina open met: 517",
+        "correctAnswer": "517",
+        "hints": [
+          "het is zwart",
+          "met zilveren klinknagels ",
+          "Kan niet missen",
+          "Probeer overal"
+        ],
+        "nextPage": "https://www.pinkmilkgames.nl/kerkPB02/"
+      },
+      {
+        "pageNumber": 10,
+        "locationNumber": 5,
+        "kop": "Los de puzzel op...",
+        "bodyTxt": " En typ het juiste zinnetje in ",
+        "correctAnswer": "musk must stop",
+        "hints": [
+          "Tap met je telefoon tegen het kaartje",
+          "Het is net als een bankpasje",
+          "Goed opletten - anders moet je het nog een keer doen",
+          "type in:  www.pinkmilk.eu/woord/woord.html"
+        ],
+        "nextPage": "https://www.pinkmilkgames.nl/tokl/"
+      },
+      {
+        "pageNumber": 11,
+        "locationNumber": 6,
+        "kop": "Er zit bij Elon een schimmel in zijn hoofd",
+        "bodyTxt": "Hoe heet deze schimmel?  [ die ook in de TV serie 'The Last of Us' wordt gebruikt.]",
+        "correctAnswer": "Cordyceps",
+        "hints": [
+          "Zonder ",
+          "Ook weer even goed googlen....",
+          "Niet best als je deze schimmel hebt ",
+          "(Ophio)cordyceps"
+        ],
+        "nextPage": "https://www.pinkmilkgames.nl/brugPB02/"
+      },
+      {
+        "pageNumber": 12,
+        "locationNumber": 6,
+        "kop": "Een boutje en een moertje",
+        "bodyTxt": "Los deze puzzel op en vul het juiste getal hier in",
+        "correctAnswer": "22",
+        "hints": [
+          "Geen moertje ... wel een bout....",
+          "Gewoon even openen....",
+          "Vermenigvuldigen en delen hebben voorrang boven optellen en aftrekken.",
+          "Het is dan natuurlijk 22"
+        ],
+        "nextPage": "https://www.pinkmilkgames.nl/toko/"
+      },
+      {
+        "pageNumber": 13,
+        "locationNumber": 7,
+        "kop": "Tesla in Space",
+        "bodyTxt": "Welke Tesla schoot Elon de ruimte in? En hij gaat nog steeds als een raket.",
+        "correctAnswer": "Roadstar",
+        "hints": [
+          "In 2018 schoot Elon een auto de ruimte in ",
+          "Zoek het maar op ",
+          "Er zat ook een Pop ",
+          "Roadstar "
+        ],
+        "nextPage": "https://www.pinkmilkgames.nl/countPB02/"
+      },
+      {
+        "pageNumber": 14,
+        "locationNumber": 7,
+        "kop": "Open de Magic Number puzzel",
+        "bodyTxt": "Gebruik 768. Leg alle cijfers zo dat horizontaal, verticaal en diagonaal opgeteld hetzelfde is",
+        "correctAnswer": "72",
+        "hints": [
+          "minder dan 80 ",
+          "meer dan 70 ",
+          "lager dan 75",
+          "72"
+        ],
+        "nextPage": "https://www.pinkmilkgames.nl/tokt/"
+      },
+      {
+        "pageNumber": 15,
+        "locationNumber": 8,
+        "kop": "Op welk nummer staat Elons favoriete letter in het alfabet?",
+        "bodyTxt": "Hij heeft zelfs een kind met die naam...",
+        "correctAnswer": "24",
+        "hints": [
+          "ga maar tellen ",
+          "Je zit in de buurt ",
+          "het zijn twee cijfers",
+          "X = letter 24 in het alfabet"
+        ],
+        "nextPage": "https://www.pinkmilkgames.nl/gallPB02/"
+      },
+      {
+        "pageNumber": 16,
+        "locationNumber": 8,
+        "kop": "Open de fles",
+        "bodyTxt": "Twee cijfers heb je al. Nu nog 1",
+        "correctAnswer": "boring",
+        "hints": [
+          "Maak het Tesla logo op de achterkant kloppend",
+          "Op de voorzijde staat binaire code ",
+          "b = 00010 ",
+          "Jullie zijn zo "
+        ],
+        "nextPage": "https://www.pinkmilkgames.nl/tokm/"
+      },
+      {
+        "pageNumber": 17,
+        "locationNumber": 9,
+        "kop": "Hoe noemen we de kaart [tafel] van alle ",
+        "bodyTxt": "Hierin staan alle bouwstenen [atomen] van alles wat je om je heen ziet",
+        "correctAnswer": "periodiek systeem",
+        "hints": [
+          "het is geen stoel",
+          "het is een systeem",
+          "periodiek",
+          "Het is dus het periodiek systeem"
+        ],
+        "nextPage": "https://www.pinkmilkgames.nl/drogPB02/"
+      },
+      {
+        "pageNumber": 18,
+        "locationNumber": 9,
+        "kop": "Los nu de radioactieve vraag op",
+        "bodyTxt": "Hint: Wat is de droom van Elon, 7 letters zonder spaties?",
+        "correctAnswer": "nohuman",
+        "hints": [
+          "Je ziet in de text 'elementen'...",
+          "Gebruik de juiste afkortingen uit het periodiek systeem",
+          "Waterstof = H",
+          "nohuman"
+        ],
+        "nextPage": "https://www.pinkmilkgames.nl/tokw/"
+      }
+    ]
+  }
+}

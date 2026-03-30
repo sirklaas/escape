@@ -1,0 +1,94 @@
+@import url('https://fonts.googleapis.com/css2?family=Barlow+Semi+Condensed:wght@300;400;500;600;700&family=Inter:wght@300;400;500;600&display=swap');
+@import "tailwindcss";
+
+:root {
+  --bg-base: #f4f6f9;
+  --bg-surface: #ffffff;
+  --bg-card: #ffffff;
+  --bg-card-hover: #f8f9fb;
+  --border: #e2e6ed;
+  --border-bright: #d0d5de;
+  --accent: #6c5ce7;
+  --accent-glow: rgba(108, 92, 231, 0.2);
+  --accent-2: #0984e3;
+  --accent-2-glow: rgba(9, 132, 227, 0.15);
+  --text-primary: #2c3e50;
+  --text-secondary: #5a6a7c;
+  --text-muted: #95a5b5;
+  --success: #00b894;
+  --warning: #fdcb6e;
+  --danger: #d63031;
+  --rat-color: #e17055;
+  --diner-color: #6c5ce7;
+  --city-color: #0984e3;
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html, body {
+  height: 100%;
+  background: var(--bg-base);
+  color: var(--text-primary);
+  font-family: 'Inter', sans-serif;
+  font-size: 13px;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+}
+
+.dark html, .dark body {
+  background: var(--bg-base);
+  color: var(--text-primary);
+}
+
+h1, h2, h3, h4, h5 {
+  font-family: 'Barlow Semi Condensed', sans-serif;
+  font-weight: 300;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+/* Scrollbars */
+::-webkit-scrollbar { width: 4px; height: 4px; }
+::-webkit-scrollbar-track { background: var(--bg-base); }
+::-webkit-scrollbar-thumb { background: var(--border-bright); border-radius: 2px; }
+::-webkit-scrollbar-thumb:hover { background: var(--accent); }
+
+/* Glow effects */
+.glow-accent { box-shadow: 0 0 20px var(--accent-glow); }
+.glow-cyan { box-shadow: 0 0 20px var(--accent-2-glow); }
+
+/* Input base styles */
+input[type="text"], textarea, select {
+  background: var(--bg-base);
+  border: 1px solid var(--border);
+  color: var(--text-primary);
+  border-radius: 6px;
+  padding: 6px 10px;
+  font-family: 'Inter', sans-serif;
+  font-size: 12px;
+  width: 100%;
+  transition: border-color 0.2s, box-shadow 0.2s;
+  outline: none;
+}
+input[type="text"]:focus, textarea:focus, select:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 2px var(--accent-glow);
+}
+textarea { resize: vertical; min-height: 56px; }
+
+/* Status badge pulse */
+@keyframes pulse-dot {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.3; }
+}
+.pulse { animation: pulse-dot 2s ease-in-out infinite; }
+
+@keyframes slide-in {
+  from { opacity: 0; transform: translateY(4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.slide-in { animation: slide-in 0.2s ease; }
