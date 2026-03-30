@@ -40,7 +40,7 @@ function emptyVariant(): VariantData {
   return { locations, pages };
 }
 function emptyData(): EscapeData {
-  return { city: emptyVariant(), diner: emptyVariant(), rat: emptyVariant() };
+  return { activeVariant: 'city', city: emptyVariant(), diner: emptyVariant(), rat: emptyVariant() };
 }
 
 // ── Field Component ────────────────────────────────────────────────────────────
@@ -216,10 +216,11 @@ export default function DashboardPage() {
             const isActive = variant === v.key;
             return (
               <button key={v.key} onClick={() => setVariant(v.key)}
+                className="group relative"
                 style={{
                   display: 'flex', flexDirection: 'column', alignItems: 'center',
                   padding: '6px 4px', borderRadius: 4, cursor: 'pointer',
-                  transition: 'all 0.2s ease', width: 56, height: 56,
+                  transition: 'all 0.2s ease', width: 64, height: 64,
                   border: `1px solid ${isActive ? '#E8924B' : '#e9ecef'}`,
                   background: isActive ? '#FFE0C4' : '#f8f9fa',
                   color: isActive ? '#C2611A' : '#6c757d',
@@ -227,6 +228,23 @@ export default function DashboardPage() {
                 }}>
                 <Icon size={20} style={{ marginBottom: 2 }} />
                 <span style={{ fontSize: 10, fontWeight: 600, letterSpacing: 0.5 }}>{v.label}</span>
+                
+                {/* Active Game Indicator */}
+                {data.activeVariant === v.key ? (
+                  <div style={{ position: 'absolute', top: 2, right: 2, fontSize: 8, background: '#27ae60', color: 'white', padding: '1px 3px', borderRadius: 3, fontWeight: 800 }}>
+                    ACTIVE
+                  </div>
+                ) : (
+                  <div onClick={(e) => {
+                    e.stopPropagation();
+                    setData({ ...data, activeVariant: v.key });
+                    setUnsaved(true);
+                  }}
+                  className="opacity-0 group-hover:opacity-100"
+                  style={{ position: 'absolute', top: 2, right: 2, fontSize: 8, background: '#bdc3c7', color: 'white', padding: '1px 3px', borderRadius: 3, fontWeight: 800 }}>
+                    SET
+                  </div>
+                )}
               </button>
             );
           })}

@@ -36,6 +36,7 @@ export interface VariantData {
 }
 
 export interface EscapeData {
+  activeVariant: GameVariant;
   city:  VariantData;
   diner: VariantData;
   rat:   VariantData;
