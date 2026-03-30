@@ -2,39 +2,7 @@
 
 import { useEffect, useState, useCallback } from 'react';
 import { Building2, UtensilsCrossed, Rat, Save, Loader2, Download } from 'lucide-react';
-
-// ── Types matching escapedata.json exactly ──────────────────────────────────
-type GameVariant = 'city' | 'diner' | 'rat';
-
-interface EscapePage {
-  pageNumber: number;
-  locationNumber: number;
-  kop: string;
-  bodyTxt: string;
-  correctAnswer: string;
-  hints: string[];
-  nextPage: string;
-}
-
-interface EscapeLocation {
-  locationNumber: number;
-  name: string;
-  heading: string;
-  subheading: string;
-  body: string;
-  startUrl: string;
-}
-
-interface EscapeData {
-  city:  VariantData;
-  diner: VariantData;
-  rat:   VariantData;
-}
-
-interface VariantData {
-  locations: EscapeLocation[];
-  pages:     EscapePage[];
-}
+import { fetchEscapeData, saveEscapeData, type EscapeData, type VariantData, type EscapeLocation, type EscapePage, type GameVariant } from '@/lib/pb';
 
 // ── Constants ─────────────────────────────────────────────────────────────────
 const ORDERED_VARIANTS: { key: GameVariant; label: string; color: string; icon: React.ElementType }[] = [
@@ -135,20 +103,21 @@ export default function DashboardPage() {
     if (type !== 'info') setTimeout(() => setStatusMsg(''), 4000);
   };
 
-  // Load JSON on mount
+  // Load from PocketBase
   const loadData = useCallback(async () => {
     setLoading(true);
-    showStatus('Loading data from server...', 'info');
+    showStatus('Fetching data from PocketBase...', 'info');
     try {
-      const res = await fetch('/api/escapedata');
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
-      const json: EscapeData = await res.json();
-      setData(json);
-      setUnsaved(false);
-      showStatus('✅ Data loaded successfully', 'success');
+      const pbData = await fetchEscapeData();
+      if (pbData) {
+        setData(pbData);
+        setUnsaved(false);
+        showStatus('✅ Data synced from database', 'success');
+      } else {
+        showStatus('⚠️ No data in database yet. Using local template.', 'info');
+      }
     } catch (err: any) {
-      showStatus(`❌ Failed to load: ${err.message}. Using empty template.`, 'error');
-      setData(emptyData());
+      showStatus(`❌ Failed to fetch: ${err.message}`, 'error');
     } finally {
       setLoading(false);
     }
@@ -156,21 +125,16 @@ export default function DashboardPage() {
 
   useEffect(() => { loadData(); }, [loadData]);
 
-  // Save JSON via API route
+  // Save to PocketBase
   const handleSave = async () => {
-    showStatus('Saving...', 'info');
+    showStatus('Updating database...', 'info');
     try {
-      const res = await fetch('/api/escapedata', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(data),
-      });
-      const result = await res.json();
-      if (result.success) {
+      const success = await saveEscapeData(data);
+      if (success) {
         setUnsaved(false);
-        showStatus(`✅ Saved! ${result.pages_count} pages at ${result.timestamp}`, 'success');
+        showStatus('✅ Changes saved to cloud!', 'success');
       } else {
-        throw new Error(result.error);
+        throw new Error('PocketBase write failed (Check API rules!)');
       }
     } catch (err: any) {
       showStatus(`❌ Save failed: ${err.message}`, 'error');
