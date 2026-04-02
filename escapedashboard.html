@@ -4,501 +4,892 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Escape Room Dashboard</title>
+    <link href="https://fonts.googleapis.com/css2?family=Barlow+Semi+Condensed:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
-        body {
-            line-height: 1.6;
+        * {
             margin: 0;
-            padding: 20px;
-            background-color: #f4f4f4;
-            font-family: Arial, sans-serif;
+            padding: 0;
+            box-sizing: border-box;
         }
+        
+        body {
+            font-family: 'Barlow Semi Condensed', sans-serif;
+            background: #f8f9fa;
+            color: #2c3e50;
+            line-height: 1.5;
+            height: 100vh;
+            overflow: hidden;
+        }
+        
         .container {
-            max-width: 1200px;
-            margin: auto;
-            background: white;
-            padding: 20px;
-            box-shadow: 0 0 10px rgba(0,0,0,0.1);
-            border-radius: 8px;
+            width: 100%;
+            max-width: none;
+            padding: 10px;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
         }
-        h1, h2 {
+        
+        h1 {
+            text-align: center;
+            font-weight: 500;
+            color: #34495e;
+            margin-bottom: 15px;
+            font-size: 20px;
+            letter-spacing: -0.5px;
+        }
+        
+        /* Icon Navigation */
+        .icon-navigation {
+            display: flex;
+            justify-content: center;
+            gap: 6px;
+            margin-bottom: 15px;
+            padding: 12px;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 1px 4px rgba(0,0,0,0.04);
+        }
+        
+        .icon-btn {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 8px 6px;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            background: #f8f9fa;
+            border: 1px solid #e9ecef;
+            min-width: 60px;
+            width: 60px;
+            height: 60px;
+        }
+        
+        .icon-btn:hover {
+            background: #e9ecef;
+            transform: translateY(-1px);
+        }
+        
+        .icon-btn.active {
+            background: #6c5ce7;
+            color: white;
+            border-color: #5f3dc4;
+        }
+        
+        .icon-btn .icon {
+            font-size: 18px;
+            margin-bottom: 2px;
+        }
+        
+        .icon-btn span {
+            font-size: 10px;
+            font-weight: 500;
+            text-align: center;
+            line-height: 1;
+        }
+        
+        /* Three Column Layout */
+        .dashboard-layout {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 12px;
+            flex: 1;
+            min-height: 0;
+        }
+        
+        .column {
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 1px 4px rgba(0,0,0,0.04);
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .column-header {
+            padding: 12px 16px;
+            background: #f8f9fa;
+            border-bottom: 1px solid #e9ecef;
+        }
+        
+        .column-header h3 {
+            font-weight: 600;
+            color: #2c3e50;
+            font-size: 16px;
+            margin: 0;
+            line-height: 1.2;
+        }
+        
+        .column-header .subtitle {
+            font-size: 13px;
+            color: #6c757d;
+            font-weight: 400;
+            margin: 0;
+            line-height: 1.2;
+        }
+        
+        .column-content {
+            padding: 12px;
+            flex: 1;
+            overflow-y: auto;
+        }
+        
+        /* Location Info Column */
+        .location-info {
             text-align: center;
         }
-        h1 {
-            color: #9c27b0;
-            margin-bottom: 30px;
+        
+        .location-title {
+            font-size: 24px;
+            font-weight: 600;
+            color: #2c3e50;
+            margin-bottom: 8px;
         }
-        .pages-container {
-            display: flex;
-            justify-content: space-between;
-            gap: 20px;
+        
+        .location-subtitle {
+            font-size: 16px;
+            color: #6c757d;
+            margin-bottom: 16px;
+            font-weight: 400;
         }
-        .page-editor {
-            width: 48%;
-            margin-bottom: 20px;
-            padding: 15px;
-            border: 1px solid #ddd;
-            border-radius: 5px;
-            background-color: #fafafa;
+        
+        .location-body {
+            font-size: 14px;
+            color: #495057;
+            line-height: 1.6;
+            padding: 16px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            border-left: 3px solid #6c5ce7;
         }
-        .page-editor h2 {
-            margin-top: 0;
-            color: #333;
-            border-bottom: 2px solid #9c27b0;
-            padding-bottom: 10px;
-        }
-        input, textarea {
-            width: 100%;
-            padding: 8px;
+        
+        /* Form Elements */
+        .form-group {
             margin-bottom: 10px;
-            border: 1px solid #ddd;
+        }
+        
+        .form-group label {
+            display: block;
+            font-weight: 500;
+            margin-bottom: 3px;
+            color: #495057;
+            font-size: 12px;
+        }
+        
+        input[type="text"], textarea {
+            width: 100%;
+            padding: 6px 8px;
+            border: 1px solid #dee2e6;
             border-radius: 4px;
-            box-sizing: border-box;
-            font-family: inherit;
+            font-family: 'Barlow Semi Condensed', sans-serif;
+            font-size: 13px;
+            transition: border-color 0.2s ease;
+            background: white;
         }
-        input:focus, textarea:focus {
+        
+        input[type="text"]:focus, textarea:focus {
             outline: none;
-            border-color: #9c27b0;
-            box-shadow: 0 0 5px rgba(156, 39, 176, 0.3);
+            border-color: #6c5ce7;
+            box-shadow: 0 0 0 1px rgba(108, 92, 231, 0.1);
         }
+        
         textarea {
-            height: 100px;
+            min-height: 60px;
             resize: vertical;
         }
+        
+        /* Preview Column */
+        .preview-item {
+            margin-bottom: 16px;
+            padding: 12px;
+            background: #f8f9fa;
+            border-radius: 6px;
+            border-left: 3px solid #dee2e6;
+        }
+        
+        .preview-item strong {
+            display: block;
+            font-weight: 500;
+            color: #495057;
+            margin-bottom: 4px;
+            font-size: 13px;
+        }
+        
+        .preview-item span {
+            color: #6c757d;
+            font-size: 14px;
+            word-break: break-word;
+        }
+        
+        /* Navigation */
         .navigation {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin: 20px 0;
-            padding: 15px;
-            background-color: #f8f9fa;
-            border-radius: 5px;
+            padding: 12px;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 1px 4px rgba(0,0,0,0.04);
+            margin-top: 10px;
         }
-        .button-row {
+        
+        .nav-buttons {
             display: flex;
-            gap: 10px;
-            margin: 20px 0;
-            flex-wrap: wrap;
+            gap: 12px;
         }
+        
         button {
-            padding: 12px 20px;
-            background-color: #9c27b0;
-            color: white;
+            padding: 8px 16px;
             border: none;
-            border-radius: 25px;
-            cursor: pointer;
-            font-size: 14px;
-            font-weight: 500;
-            transition: all 0.3s ease;
-            flex: 1;
-            min-width: 150px;
-        }
-        button:hover {
-            background-color: #7b1fa2;
-            transform: translateY(-2px);
-            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
-        }
-        button:disabled {
-            background-color: #ccc;
-            cursor: not-allowed;
-            transform: none;
-            box-shadow: none;
-        }
-        #saveToServerButton {
-            background-color: #28a745;
-            font-weight: bold;
-        }
-        #saveToServerButton:hover {
-            background-color: #218838;
-        }
-        #saveToServerButton.unsaved {
-            background-color: #ffc107;
-            color: #212529;
-        }
-        #saveToServerButton.unsaved:hover {
-            background-color: #e0a800;
-        }
-        #importFromFileButton {
-            background-color: #17a2b8;
-        }
-        #importFromFileButton:hover {
-            background-color: #138496;
-        }
-        #importFromUrlButton {
-            background-color: #6f42c1;
-        }
-        #importFromUrlButton:hover {
-            background-color: #5a32a3;
-        }
-        #generateJsonButton, #downloadJsonButton {
-            display: block;
-            width: 100%;
-            margin-top: 20px;
-            min-width: auto;
-        }
-        #downloadJsonButton {
-            background-color: #fd7e14;
-        }
-        #downloadJsonButton:hover {
-            background-color: #e8690b;
-        }
-        #jsonOutput {
-            width: 100%;
-            height: 300px;
-            margin-top: 20px;
-            font-family: 'Courier New', monospace;
-            font-size: 12px;
-            background-color: #f8f9fa;
-            border: 1px solid #ddd;
             border-radius: 4px;
-            padding: 10px;
-            box-sizing: border-box;
-        }
-        .status-indicator {
-            padding: 15px;
-            margin: 15px 0;
-            border-radius: 5px;
-            display: none;
+            font-family: 'Barlow Semi Condensed', sans-serif;
+            font-size: 13px;
             font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s ease;
         }
+        
+        .btn-previous {
+            background: #6c757d;
+            color: white;
+        }
+        
+        .btn-previous:hover:not(:disabled) {
+            background: #5a6268;
+        }
+        
+        .btn-save {
+            background: #6c5ce7;
+            color: white;
+        }
+        
+        .btn-save:hover {
+            background: #5f3dc4;
+        }
+        
+        .btn-save.unsaved {
+            background: #fd79a8;
+            color: white;
+        }
+        
+        .btn-next {
+            background: #74b9ff;
+            color: white;
+        }
+        
+        .btn-next:hover:not(:disabled) {
+            background: #0984e3;
+        }
+        
+        button:disabled {
+            background: #dee2e6;
+            color: #6c757d;
+            cursor: not-allowed;
+        }
+        
+        .location-counter {
+            font-weight: 500;
+            color: #495057;
+        }
+        
+        .status-message {
+            padding: 12px 16px;
+            margin-bottom: 20px;
+            border-radius: 6px;
+            display: none;
+            font-weight: 400;
+        }
+        
         .status-success {
-            background-color: #d4edda;
-            color: #155724;
-            border: 1px solid #c3e6cb;
-        }
-        .status-error {
-            background-color: #f8d7da;
-            color: #721c24;
-            border: 1px solid #f5c6cb;
-        }
-        .status-warning {
-            background-color: #fff3cd;
-            color: #856404;
-            border: 1px solid #ffeaa7;
-        }
-        .status-info {
-            background-color: #d1ecf1;
+            background: #d1ecf1;
             color: #0c5460;
-            border: 1px solid #bee5eb;
+            border-left: 3px solid #17a2b8;
         }
-        .page-info {
-            font-weight: bold;
-            color: #9c27b0;
-            font-size: 16px;
+        
+        .status-error {
+            background: #f8d7da;
+            color: #721c24;
+            border-left: 3px solid #dc3545;
         }
-        @media (max-width: 768px) {
-            .pages-container {
-                flex-direction: column;
+        
+        .status-info {
+            background: #d1ecf1;
+            color: #0c5460;
+            border-left: 3px solid #17a2b8;
+        }
+        
+        @media (max-width: 1200px) {
+            .dashboard-layout {
+                grid-template-columns: 1fr;
+                gap: 16px;
             }
-            .page-editor {
-                width: 100%;
+            
+            .icon-navigation {
+                gap: 6px;
+                padding: 16px;
             }
-            .button-row {
-                flex-direction: column;
-            }
-            button {
-                min-width: auto;
+            
+            .icon-btn {
+                min-width: 60px;
+                padding: 10px 6px;
             }
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <h1>🎮 Escape Room Dashboard</h1>
+        <h1>Escape Room Dashboard</h1>
         
-        <div id="statusIndicator" class="status-indicator"></div>
-        
-        <div class="button-row">
-            <button id="importFromFileButton">📁 Import from File</button>
-            <button id="importFromUrlButton">🔄 Reload from Server</button>
-            <button id="saveToServerButton">💾 Save to Server</button>
+        <!-- Icon Navigation -->
+        <div class="icon-navigation">
+            <div class="icon-btn active" data-location="0"><div class="icon">🔧</div><span>Blokker</span></div>
+            <div class="icon-btn" data-location="1"><div class="icon">📚</div><span>Boek</span></div>
+            <div class="icon-btn" data-location="2"><div class="icon">⚡</div><span>Electro</span></div>
+            <div class="icon-btn" data-location="3"><div class="icon">📋</div><span>Lijst</span></div>
+            <div class="icon-btn" data-location="4"><div class="icon">⛪</div><span>Kerk</span></div>
+            <div class="icon-btn" data-location="5"><div class="icon">🌉</div><span>Brug</span></div>
+            <div class="icon-btn" data-location="6"><div class="icon">🧮</div><span>Count</span></div>
+            <div class="icon-btn" data-location="7"><div class="icon">🍸</div><span>Gall</span></div>
+            <div class="icon-btn" data-location="8"><div class="icon">🧪</div><span>Drog</span></div>
         </div>
         
-        <div id="pagesContainer" class="pages-container"></div>
+        <div id="statusMessage" class="status-message"></div>
         
+        <!-- Three Column Dashboard -->
+        <div class="dashboard-layout">
+            <!-- Column 1: Location Details -->
+            <div class="column">
+                <div class="column-header">
+                    <h3><span id="locationNumber">Loc 01</span> / <span id="locationName">Blokker</span></h3>
+                </div>
+                <div class="column-content">
+                    <div class="form-group">
+                        <label>Heading</label>
+                        <input type="text" id="locHeading" placeholder="Enter heading...">
+                    </div>
+                    <div class="form-group">
+                        <label>Sub Heading</label>
+                        <input type="text" id="locSubheading" placeholder="Enter sub heading...">
+                    </div>
+                    <div class="form-group">
+                        <label>Body</label>
+                        <textarea id="locBody" placeholder="Enter body text..."></textarea>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Column 2: Page 1/3/5 etc (Odd Pages) -->
+            <div class="column">
+                <div class="column-header">
+                    <h3 id="page1Title">Page 1</h3>
+                </div>
+                <div class="column-content">
+                    <div class="form-group">
+                        <label>Heading</label>
+                        <input type="text" id="page1Heading" placeholder="Enter heading...">
+                    </div>
+                    <div class="form-group">
+                        <label>Body Text</label>
+                        <textarea id="page1Body" placeholder="Enter body text..."></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label>Correct Answer</label>
+                        <input type="text" id="page1Answer" placeholder="Enter correct answer...">
+                    </div>
+                    <div class="form-group">
+                        <label>Hint 1</label>
+                        <input type="text" id="page1Hint1" placeholder="Enter hint 1...">
+                    </div>
+                    <div class="form-group">
+                        <label>Hint 2</label>
+                        <input type="text" id="page1Hint2" placeholder="Enter hint 2...">
+                    </div>
+                    <div class="form-group">
+                        <label>Hint 3</label>
+                        <input type="text" id="page1Hint3" placeholder="Enter hint 3...">
+                    </div>
+                    <div class="form-group">
+                        <label>Hint 4</label>
+                        <input type="text" id="page1Hint4" placeholder="Enter hint 4...">
+                    </div>
+                    <div class="form-group">
+                        <label>Next Page URL</label>
+                        <input type="text" id="page1NextPage" placeholder="Enter next page URL...">
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Column 3: Page 2/4/6 etc (Even Pages) -->
+            <div class="column">
+                <div class="column-header">
+                    <h3 id="page2Title">Page 2</h3>
+                </div>
+                <div class="column-content">
+                    <div class="form-group">
+                        <label>Heading</label>
+                        <input type="text" id="page2Heading" placeholder="Enter heading...">
+                    </div>
+                    <div class="form-group">
+                        <label>Body Text</label>
+                        <textarea id="page2Body" placeholder="Enter body text..."></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label>Correct Answer</label>
+                        <input type="text" id="page2Answer" placeholder="Enter correct answer...">
+                    </div>
+                    <div class="form-group">
+                        <label>Hint 1</label>
+                        <input type="text" id="page2Hint1" placeholder="Enter hint 1...">
+                    </div>
+                    <div class="form-group">
+                        <label>Hint 2</label>
+                        <input type="text" id="page2Hint2" placeholder="Enter hint 2...">
+                    </div>
+                    <div class="form-group">
+                        <label>Hint 3</label>
+                        <input type="text" id="page2Hint3" placeholder="Enter hint 3...">
+                    </div>
+                    <div class="form-group">
+                        <label>Hint 4</label>
+                        <input type="text" id="page2Hint4" placeholder="Enter hint 4...">
+                    </div>
+                    <div class="form-group">
+                        <label>Next Page URL</label>
+                        <input type="text" id="page2NextPage" placeholder="Enter next page URL...">
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Navigation -->
         <div class="navigation">
-            <button id="prevButton">⬅️ Previous</button>
-            <span id="pageInfo" class="page-info"></span>
-            <button id="nextButton">Next ➡️</button>
+            <div class="nav-buttons">
+                <button id="prevBtn" class="btn-previous">← Previous</button>
+                <button id="saveBtn" class="btn-save">Save</button>
+                <button id="nextBtn" class="btn-next">Next →</button>
+            </div>
+            <div class="location-counter" id="locationCounter">Location 1 of 9</div>
         </div>
-        
-        <button id="generateJsonButton">📋 Generate Updated JSON</button>
-        <button id="downloadJsonButton" style="display: none;">⬇️ Download JSON File</button>
-        
-        <h4>Updated JSON Data</h4>
-        <textarea id="jsonOutput" readonly placeholder="Generated JSON will appear here..."></textarea>
     </div>
 
     <script>
-        let jsonData = null;
-        let currentBlock = 0;
+        const locations = [
+            { 
+                name: 'Blokker', 
+                location: { heading: '', subheading: '', body: '' },
+                page1: { heading: '', bodyTxt: '', correctAnswer: '', hints: ['', '', '', ''], nextPage: '' },
+                page2: { heading: '', bodyTxt: '', correctAnswer: '', hints: ['', '', '', ''], nextPage: '' }
+            },
+            { 
+                name: 'Boek', 
+                location: { heading: '', subheading: '', body: '' },
+                page1: { heading: '', bodyTxt: '', correctAnswer: '', hints: ['', '', '', ''], nextPage: '' },
+                page2: { heading: '', bodyTxt: '', correctAnswer: '', hints: ['', '', '', ''], nextPage: '' }
+            },
+            { 
+                name: 'Electro', 
+                location: { heading: '', subheading: '', body: '' },
+                page1: { heading: '', bodyTxt: '', correctAnswer: '', hints: ['', '', '', ''], nextPage: '' },
+                page2: { heading: '', bodyTxt: '', correctAnswer: '', hints: ['', '', '', ''], nextPage: '' }
+            },
+            { 
+                name: 'Lijst', 
+                location: { heading: '', subheading: '', body: '' },
+                page1: { heading: '', bodyTxt: '', correctAnswer: '', hints: ['', '', '', ''], nextPage: '' },
+                page2: { heading: '', bodyTxt: '', correctAnswer: '', hints: ['', '', '', ''], nextPage: '' }
+            },
+            { 
+                name: 'Kerk', 
+                location: { heading: '', subheading: '', body: '' },
+                page1: { heading: '', bodyTxt: '', correctAnswer: '', hints: ['', '', '', ''], nextPage: '' },
+                page2: { heading: '', bodyTxt: '', correctAnswer: '', hints: ['', '', '', ''], nextPage: '' }
+            },
+            { 
+                name: 'Brug', 
+                location: { heading: '', subheading: '', body: '' },
+                page1: { heading: '', bodyTxt: '', correctAnswer: '', hints: ['', '', '', ''], nextPage: '' },
+                page2: { heading: '', bodyTxt: '', correctAnswer: '', hints: ['', '', '', ''], nextPage: '' }
+            },
+            { 
+                name: 'Count', 
+                location: { heading: '', subheading: '', body: '' },
+                page1: { heading: '', bodyTxt: '', correctAnswer: '', hints: ['', '', '', ''], nextPage: '' },
+                page2: { heading: '', bodyTxt: '', correctAnswer: '', hints: ['', '', '', ''], nextPage: '' }
+            },
+            { 
+                name: 'Gall', 
+                location: { heading: '', subheading: '', body: '' },
+                page1: { heading: '', bodyTxt: '', correctAnswer: '', hints: ['', '', '', ''], nextPage: '' },
+                page2: { heading: '', bodyTxt: '', correctAnswer: '', hints: ['', '', '', ''], nextPage: '' }
+            },
+            { 
+                name: 'Drog', 
+                location: { heading: '', subheading: '', body: '' },
+                page1: { heading: '', bodyTxt: '', correctAnswer: '', hints: ['', '', '', ''], nextPage: '' },
+                page2: { heading: '', bodyTxt: '', correctAnswer: '', hints: ['', '', '', ''], nextPage: '' }
+            }
+        ];
+        
+        let currentIndex = 0;
         let hasUnsavedChanges = false;
         
-        const pagesContainer = document.getElementById('pagesContainer');
-        const prevButton = document.getElementById('prevButton');
-        const nextButton = document.getElementById('nextButton');
-        const pageInfo = document.getElementById('pageInfo');
-        const generateJsonButton = document.getElementById('generateJsonButton');
-        const downloadJsonButton = document.getElementById('downloadJsonButton');
-        const jsonOutput = document.getElementById('jsonOutput');
-        const statusIndicator = document.getElementById('statusIndicator');
-        const saveToServerButton = document.getElementById('saveToServerButton');
-        const importFromFileButton = document.getElementById('importFromFileButton');
-        const importFromUrlButton = document.getElementById('importFromUrlButton');
-
-        function showStatus(message, type = 'info') {
-            statusIndicator.textContent = message;
-            statusIndicator.className = `status-indicator status-${type}`;
-            statusIndicator.style.display = 'block';
+        function init() {
+            loadDataFromServer();
+            setupEventListeners();
+        }
+        
+        function setupEventListeners() {
+            document.querySelectorAll('.icon-btn').forEach((btn, index) => {
+                btn.addEventListener('click', () => navigateToLocation(index));
+            });
             
-            // Auto-hide success messages after 5 seconds
-            if (type === 'success') {
-                setTimeout(() => {
-                    statusIndicator.style.display = 'none';
-                }, 5000);
+            document.getElementById('prevBtn').addEventListener('click', () => navigate(-1));
+            document.getElementById('nextBtn').addEventListener('click', () => navigate(1));
+            document.getElementById('saveBtn').addEventListener('click', saveData);
+            
+            // Location fields
+            ['locHeading', 'locSubheading', 'locBody'].forEach(id => {
+                document.getElementById(id).addEventListener('input', markUnsaved);
+            });
+            
+            // Page 1 fields
+            ['page1Heading', 'page1Body', 'page1Answer', 'page1Hint1', 'page1Hint2', 'page1Hint3', 'page1Hint4', 'page1NextPage'].forEach(id => {
+                document.getElementById(id).addEventListener('input', markUnsaved);
+            });
+            
+            // Page 2 fields
+            ['page2Heading', 'page2Body', 'page2Answer', 'page2Hint1', 'page2Hint2', 'page2Hint3', 'page2Hint4', 'page2NextPage'].forEach(id => {
+                document.getElementById(id).addEventListener('input', markUnsaved);
+            });
+        }
+        
+        function navigateToLocation(index) {
+            if (index !== currentIndex) {
+                saveData();
+                currentIndex = index;
+                renderDashboard();
             }
         }
-
-        function updateUnsavedStatus() {
-            hasUnsavedChanges = true;
-            saveToServerButton.textContent = '💾 Save to Server *';
-            saveToServerButton.classList.add('unsaved');
+        
+        function navigate(direction) {
+            const newIndex = currentIndex + direction;
+            if (newIndex >= 0 && newIndex < locations.length) {
+                saveData();
+                currentIndex = newIndex;
+                renderDashboard();
+            }
         }
-
-        function clearUnsavedStatus() {
-            hasUnsavedChanges = false;
-            saveToServerButton.textContent = '💾 Save to Server';
-            saveToServerButton.classList.remove('unsaved');
+        
+        function renderDashboard() {
+            const current = locations[currentIndex];
+            
+            // Column 1: Location Info
+            document.getElementById('locationNumber').textContent = `Loc ${String(currentIndex + 1).padStart(2, '0')}`;
+            document.getElementById('locationName').textContent = current.name;
+            document.getElementById('locHeading').value = current.location.heading;
+            document.getElementById('locSubheading').value = current.location.subheading;
+            document.getElementById('locBody').value = current.location.body;
+            
+            // Column 2: Page 1 (odd pages: 1, 3, 5, etc.)
+            const page1Number = (currentIndex * 2) + 1;
+            document.getElementById('page1Title').textContent = `Page ${page1Number}`;
+            document.getElementById('page1Heading').value = current.page1.heading;
+            document.getElementById('page1Body').value = current.page1.bodyTxt;
+            document.getElementById('page1Answer').value = current.page1.correctAnswer;
+            document.getElementById('page1Hint1').value = current.page1.hints[0] || '';
+            document.getElementById('page1Hint2').value = current.page1.hints[1] || '';
+            document.getElementById('page1Hint3').value = current.page1.hints[2] || '';
+            document.getElementById('page1Hint4').value = current.page1.hints[3] || '';
+            document.getElementById('page1NextPage').value = current.page1.nextPage;
+            
+            // Column 3: Page 2 (even pages: 2, 4, 6, etc.)
+            const page2Number = (currentIndex * 2) + 2;
+            document.getElementById('page2Title').textContent = `Page ${page2Number}`;
+            document.getElementById('page2Heading').value = current.page2.heading;
+            document.getElementById('page2Body').value = current.page2.bodyTxt;
+            document.getElementById('page2Answer').value = current.page2.correctAnswer;
+            document.getElementById('page2Hint1').value = current.page2.hints[0] || '';
+            document.getElementById('page2Hint2').value = current.page2.hints[1] || '';
+            document.getElementById('page2Hint3').value = current.page2.hints[2] || '';
+            document.getElementById('page2Hint4').value = current.page2.hints[3] || '';
+            document.getElementById('page2NextPage').value = current.page2.nextPage;
+            
+            updateNavigation();
+            clearUnsaved();
         }
-
+        
+        function updateNavigation() {
+            document.querySelectorAll('.icon-btn').forEach((btn, index) => {
+                btn.classList.toggle('active', index === currentIndex);
+            });
+            
+            document.getElementById('prevBtn').disabled = currentIndex === 0;
+            document.getElementById('nextBtn').disabled = currentIndex === locations.length - 1;
+            document.getElementById('locationCounter').textContent = `Location ${currentIndex + 1} of ${locations.length}`;
+        }
+        
+        function saveData() {
+            const current = locations[currentIndex];
+            
+            // Save location data
+            current.location.heading = document.getElementById('locHeading').value;
+            current.location.subheading = document.getElementById('locSubheading').value;
+            current.location.body = document.getElementById('locBody').value;
+            
+            // Save page 1 data
+            current.page1.heading = document.getElementById('page1Heading').value;
+            current.page1.bodyTxt = document.getElementById('page1Body').value;
+            current.page1.correctAnswer = document.getElementById('page1Answer').value;
+            current.page1.hints = [
+                document.getElementById('page1Hint1').value,
+                document.getElementById('page1Hint2').value,
+                document.getElementById('page1Hint3').value,
+                document.getElementById('page1Hint4').value
+            ];
+            current.page1.nextPage = document.getElementById('page1NextPage').value;
+            
+            // Save page 2 data
+            current.page2.heading = document.getElementById('page2Heading').value;
+            current.page2.bodyTxt = document.getElementById('page2Body').value;
+            current.page2.correctAnswer = document.getElementById('page2Answer').value;
+            current.page2.hints = [
+                document.getElementById('page2Hint1').value,
+                document.getElementById('page2Hint2').value,
+                document.getElementById('page2Hint3').value,
+                document.getElementById('page2Hint4').value
+            ];
+            current.page2.nextPage = document.getElementById('page2NextPage').value;
+            
+            // Save to localStorage
+            localStorage.setItem('escapeRoomData', JSON.stringify(locations));
+            
+            // Also save to server
+            saveToServer();
+            
+            showStatus('Data saved successfully', 'success');
+            clearUnsaved();
+        }
+        
         async function saveToServer() {
-            if (!jsonData) {
-                showStatus('No data to save', 'warning');
-                return;
-            }
-            
-            updateJsonData(); // Ensure we have the latest data
-            
-            saveToServerButton.disabled = true;
-            const originalText = saveToServerButton.textContent;
-            saveToServerButton.textContent = '💾 Saving...';
-            
             try {
+                // Convert our location structure back to server format
+                const serverData = convertLocationsToServerData();
+                
                 const response = await fetch('save-json.php', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
                     },
-                    body: JSON.stringify(jsonData)
+                    body: JSON.stringify(serverData)
                 });
                 
                 const result = await response.json();
                 
                 if (result.success) {
-                    showStatus(`✅ Saved successfully! ${result.pages_count} pages updated at ${result.timestamp}`, 'success');
-                    clearUnsavedStatus();
+                    showStatus(`✅ Saved to server! ${result.pages_count} pages updated at ${result.timestamp}`, 'success');
                 } else {
                     throw new Error(result.error || 'Unknown server error');
                 }
                 
             } catch (error) {
-                console.error('Save error:', error);
-                showStatus(`❌ Save failed: ${error.message}`, 'error');
-            } finally {
-                saveToServerButton.disabled = false;
-                saveToServerButton.textContent = hasUnsavedChanges ? '💾 Save to Server *' : '💾 Save to Server';
+                console.error('Save to server error:', error);
+                showStatus(`⚠️ Saved locally, but server save failed: ${error.message}`, 'error');
             }
         }
-
-        function fetchDataFromUrl() {
-            showStatus('Loading data from server...', 'info');
+        
+        function convertLocationsToServerData() {
+            const pages = [];
+            const locationData = [];
             
-            fetch('JSON/escapedata.json')
-                .then(response => {
-                    if (!response.ok) {
-                        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-                    }
-                    return response.json();
-                })
-                .then(data => {
-                    jsonData = data;
-                    currentBlock = 0; // Reset to first page
-                    renderCurrentBlock();
-                    clearUnsavedStatus();
-                    showStatus('✅ Data loaded successfully from server', 'success');
-                })
-                .catch(error => {
-                    console.error('Error fetching JSON:', error);
-                    showStatus(`❌ Failed to load data from server: ${error.message}`, 'error');
+            locations.forEach((location, locationIndex) => {
+                // Add location data
+                locationData.push({
+                    locationNumber: locationIndex + 1,
+                    name: location.name,
+                    heading: location.location.heading,
+                    subheading: location.location.subheading,
+                    body: location.location.body,
+                    startUrl: location.location.startUrl || ''
                 });
-        }
-
-        function renderCurrentBlock() {
-            if (!jsonData || !jsonData.pages) {
-                showStatus('No valid data to display', 'warning');
-                return;
-            }
-
-            const totalPages = jsonData.pages.length;
-            const startPage = currentBlock * 2;
-            const endPage = Math.min(startPage + 2, totalPages);
-
-            pagesContainer.innerHTML = '';
-            
-            if (totalPages === 0) {
-                pagesContainer.innerHTML = '<p>No pages found in the data.</p>';
-                return;
-            }
-
-            for (let i = startPage; i < endPage; i++) {
-                pagesContainer.appendChild(createPageEditor(jsonData.pages[i], i));
-            }
-
-            pageInfo.textContent = `Pages ${startPage + 1}-${endPage} of ${totalPages}`;
-            prevButton.disabled = currentBlock === 0;
-            nextButton.disabled = endPage >= totalPages;
-            
-            // Add change listeners to detect edits
-            addChangeListeners();
-        }
-
-        function addChangeListeners() {
-            const inputs = pagesContainer.querySelectorAll('input, textarea');
-            inputs.forEach(input => {
-                input.addEventListener('input', updateUnsavedStatus);
-            });
-        }
-
-        function createPageEditor(page, index) {
-            const editor = document.createElement('div');
-            editor.className = 'page-editor';
-            editor.innerHTML = `
-                <h2>📄 Page ${page.pageNumber || (index + 1)}</h2>
-                <input type="text" id="kop-${index}" placeholder="Header (Kop)" value="${page.kop || ''}">
-                <textarea id="bodyTxt-${index}" placeholder="Body Text">${page.bodyTxt || ''}</textarea>
-                <input type="text" id="correctAnswer-${index}" placeholder="Correct Answer" value="${page.correctAnswer || ''}">
-                <input type="text" id="hint-${index}-0" placeholder="Hint 1" value="${(page.hints && page.hints[0]) || ''}">
-                <input type="text" id="hint-${index}-1" placeholder="Hint 2" value="${(page.hints && page.hints[1]) || ''}">
-                <input type="text" id="hint-${index}-2" placeholder="Hint 3" value="${(page.hints && page.hints[2]) || ''}">
-                <input type="text" id="hint-${index}-3" placeholder="Hint 4" value="${(page.hints && page.hints[3]) || ''}">
-                <input type="text" id="nextPage-${index}" placeholder="Next Page URL" value="${page.nextPage || ''}">
-            `;
-            return editor;
-        }
-
-        function updateJsonData() {
-            if (!jsonData || !jsonData.pages) return;
-            
-            jsonData.pages.forEach((page, i) => {
-                const kopElement = document.getElementById(`kop-${i}`);
-                const bodyTxtElement = document.getElementById(`bodyTxt-${i}`);
-                const correctAnswerElement = document.getElementById(`correctAnswer-${i}`);
-                const nextPageElement = document.getElementById(`nextPage-${i}`);
-
-                if (kopElement) page.kop = kopElement.value;
-                if (bodyTxtElement) page.bodyTxt = bodyTxtElement.value;
-                if (correctAnswerElement) page.correctAnswer = correctAnswerElement.value;
-                if (nextPageElement) page.nextPage = nextPageElement.value;
-
-                // Update hints
-                const newHints = [0, 1, 2, 3]
-                    .map(hintIndex => {
-                        const hintElement = document.getElementById(`hint-${i}-${hintIndex}`);
-                        return hintElement ? hintElement.value : '';
-                    })
-                    .filter(hint => hint.trim() !== '');
                 
-                page.hints = newHints;
-            });
-        }
-
-        function downloadJsonFile() {
-            updateJsonData();
-            const jsonString = JSON.stringify(jsonData, null, 2);
-            const blob = new Blob([jsonString], { type: 'application/json' });
-            const url = URL.createObjectURL(blob);
-            
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = 'escapedata.json';
-            document.body.appendChild(a);
-            a.click();
-            document.body.removeChild(a);
-            URL.revokeObjectURL(url);
-            
-            showStatus('📁 JSON file downloaded to your computer', 'info');
-        }
-
-        function importJsonFromFile() {
-            const input = document.createElement('input');
-            input.type = 'file';
-            input.accept = 'application/json';
-            input.onchange = function(event) {
-                const file = event.target.files[0];
-                if (!file) return;
+                // Add page 1 (odd page numbers: 1, 3, 5, etc.)
+                const page1Number = (locationIndex * 2) + 1;
+                pages.push({
+                    pageNumber: page1Number,
+                    locationNumber: locationIndex + 1,
+                    kop: location.page1.heading,
+                    bodyTxt: location.page1.bodyTxt,
+                    correctAnswer: location.page1.correctAnswer,
+                    hints: [
+                        location.page1.hints[0] || '',
+                        location.page1.hints[1] || '',
+                        location.page1.hints[2] || '',
+                        location.page1.hints[3] || ''
+                    ],
+                    nextPage: location.page1.nextPage
+                });
                 
-                const reader = new FileReader();
-                reader.onload = function(e) {
-                    try {
-                        const data = JSON.parse(e.target.result);
-                        if (!data.pages || !Array.isArray(data.pages)) {
-                            throw new Error('Invalid JSON structure - missing pages array');
-                        }
-                        jsonData = data;
-                        currentBlock = 0;
-                        renderCurrentBlock();
-                        updateUnsavedStatus();
-                        showStatus('✅ JSON imported from file - remember to save to server!', 'warning');
-                    } catch (error) {
-                        console.error('Error parsing JSON:', error);
-                        showStatus(`❌ Failed to parse JSON file: ${error.message}`, 'error');
-                    }
-                };
-                reader.readAsText(file);
+                // Add page 2 (even page numbers: 2, 4, 6, etc.)
+                const page2Number = (locationIndex * 2) + 2;
+                pages.push({
+                    pageNumber: page2Number,
+                    locationNumber: locationIndex + 1,
+                    kop: location.page2.heading,
+                    bodyTxt: location.page2.bodyTxt,
+                    correctAnswer: location.page2.correctAnswer,
+                    hints: [
+                        location.page2.hints[0] || '',
+                        location.page2.hints[1] || '',
+                        location.page2.hints[2] || '',
+                        location.page2.hints[3] || ''
+                    ],
+                    nextPage: location.page2.nextPage
+                });
+            });
+            
+            return { 
+                locations: locationData,
+                pages: pages 
             };
-            input.click();
         }
-
-        // Warn before leaving with unsaved changes
+        
+        async function loadDataFromServer() {
+            try {
+                showStatus('Loading data from server...', 'info');
+                const response = await fetch('escapedata.json');
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+                
+                const serverData = await response.json();
+                
+                // Convert server data structure to our dashboard structure
+                if (serverData && serverData.pages) {
+                    convertServerDataToLocations(serverData.pages, serverData.locations);
+                    showStatus('✅ Data loaded successfully from server', 'success');
+                } else {
+                    throw new Error('Invalid data structure - missing pages array');
+                }
+                
+                renderDashboard();
+                
+            } catch (error) {
+                console.error('Error loading data from server:', error);
+                showStatus(`❌ Failed to load from server: ${error.message}. Using local data.`, 'error');
+                
+                // Fallback to localStorage
+                loadLocalData();
+                renderDashboard();
+            }
+        }
+        
+        function convertServerDataToLocations(pages, locationData) {
+            // First load location data if available
+            if (locationData && Array.isArray(locationData)) {
+                locationData.forEach((locData, index) => {
+                    if (index < locations.length) {
+                        locations[index].location = {
+                            heading: locData.heading || '',
+                            subheading: locData.subheading || '',
+                            body: locData.body || '',
+                            startUrl: locData.startUrl || ''
+                        };
+                    }
+                });
+            }
+            
+            // Map server pages to our location structure
+            pages.forEach((page) => {
+                // Use locationNumber from the page data (1-based)
+                const locationIndex = (page.locationNumber || 1) - 1;
+                
+                // Use pageNumber to determine if this is page1 or page2 for this location
+                // Page numbers 1,3,5,7... are odd (first page of location)
+                // Page numbers 2,4,6,8... are even (second page of location)
+                const pageNumber = page.pageNumber || 1;
+                const isFirstPageOfLocation = pageNumber % 2 === 1;
+                
+                if (locationIndex < locations.length) {
+                    const location = locations[locationIndex];
+                    
+                    // Handle hints array - ensure we have 4 hints
+                    const pageHints = page.hints || [];
+                    const hints = [
+                        pageHints[0] || '',
+                        pageHints[1] || '',
+                        pageHints[2] || '',
+                        pageHints[3] || ''
+                    ];
+                    
+                    if (isFirstPageOfLocation) {
+                        // This is page 1, 3, 5, etc. (odd page numbers = first page of location)
+                        location.page1 = {
+                            heading: page.kop || page.heading || '',
+                            bodyTxt: page.bodyTxt || page.body || '',
+                            correctAnswer: page.correctAnswer || page.correct || '',
+                            hints: hints,
+                            nextPage: page.nextPage || page.nextpage || ''
+                        };
+                    } else {
+                        // This is page 2, 4, 6, etc. (even page numbers = second page of location)
+                        location.page2 = {
+                            heading: page.kop || page.heading || '',
+                            bodyTxt: page.bodyTxt || page.body || '',
+                            correctAnswer: page.correctAnswer || page.correct || '',
+                            hints: hints,
+                            nextPage: page.nextPage || page.nextpage || ''
+                        };
+                    }
+                }
+            });
+        }
+        
+        function loadLocalData() {
+            const saved = localStorage.getItem('escapeRoomData');
+            if (saved) {
+                try {
+                    const savedData = JSON.parse(saved);
+                    savedData.forEach((saved, index) => {
+                        if (locations[index]) {
+                            locations[index] = { ...locations[index], ...saved };
+                        }
+                    });
+                } catch (e) {
+                    console.error('Error loading local data:', e);
+                }
+            }
+        }
+        
+        function markUnsaved() {
+            hasUnsavedChanges = true;
+            document.getElementById('saveBtn').textContent = 'Save *';
+            document.getElementById('saveBtn').classList.add('unsaved');
+        }
+        
+        function clearUnsaved() {
+            hasUnsavedChanges = false;
+            document.getElementById('saveBtn').textContent = 'Save';
+            document.getElementById('saveBtn').classList.remove('unsaved');
+        }
+        
+        function showStatus(message, type) {
+            const status = document.getElementById('statusMessage');
+            status.textContent = message;
+            status.className = `status-message status-${type}`;
+            status.style.display = 'block';
+            setTimeout(() => status.style.display = 'none', 3000);
+        }
+        
         window.addEventListener('beforeunload', (e) => {
             if (hasUnsavedChanges) {
                 e.preventDefault();
-                e.returnValue = 'You have unsaved changes. Are you sure you want to leave?';
+                e.returnValue = 'Unsaved changes will be lost.';
             }
         });
-
-        // Event listeners
-        prevButton.addEventListener('click', () => {
-            if (currentBlock > 0) {
-                updateJsonData();
-                currentBlock--;
-                renderCurrentBlock();
-            }
-        });
-
-        nextButton.addEventListener('click', () => {
-            if ((currentBlock + 1) * 2 < jsonData.pages.length) {
-                updateJsonData();
-                currentBlock++;
-                renderCurrentBlock();
-            }
-        });
-
-        generateJsonButton.addEventListener('click', () => {
-            updateJsonData();
-            const jsonString = JSON.stringify(jsonData, null, 2);
-            jsonOutput.value = jsonString;
-            console.log('Updated JSON:', jsonString);
-            downloadJsonButton.style.display = 'block';
-            showStatus('📋 JSON generated in textarea below', 'info');
-        });
-
-        downloadJsonButton.addEventListener('click', downloadJsonFile);
-        importFromFileButton.addEventListener('click', importJsonFromFile);
-        importFromUrlButton.addEventListener('click', fetchDataFromUrl);
-        saveToServerButton.addEventListener('click', saveToServer);
-
-        // Initialize - load data on page load
-        fetchDataFromUrl();
+        
+        init();
     </script>
 </body>
 </html>

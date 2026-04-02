@@ -31,7 +31,7 @@ try {
     }
     
     // Define the path to your JSON file
-    $jsonFilePath = $_SERVER['DOCUMENT_ROOT'] . '/fun/JSON/escapedata.json';
+    $jsonFilePath = $_SERVER['DOCUMENT_ROOT'] . '/fun/escapedata.json';
     
     // Create directory if it doesn't exist
     $jsonDir = dirname($jsonFilePath);
