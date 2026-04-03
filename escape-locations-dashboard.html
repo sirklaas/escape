@@ -1,0 +1,705 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Escape Room Locations Dashboard</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f5f5f5;
+            line-height: 1.6;
+        }
+        
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        
+        h1 {
+            text-align: center;
+            color: #333;
+            margin-bottom: 30px;
+            font-size: 28px;
+        }
+        
+        .location-editor {
+            background: #fafafa;
+            padding: 25px;
+            border-radius: 8px;
+            border: 2px solid #e0e0e0;
+            margin-bottom: 20px;
+        }
+        
+        .location-title {
+            font-size: 24px;
+            font-weight: bold;
+            color: #9c27b0;
+            margin-bottom: 20px;
+            text-align: center;
+            text-transform: capitalize;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        label {
+            display: block;
+            font-weight: bold;
+            margin-bottom: 8px;
+            color: #555;
+            font-size: 16px;
+        }
+        
+        input[type="text"] {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #ddd;
+            border-radius: 6px;
+            font-size: 16px;
+            box-sizing: border-box;
+            transition: border-color 0.3s ease;
+        }
+        
+        input[type="text"]:focus {
+            outline: none;
+            border-color: #9c27b0;
+            box-shadow: 0 0 0 3px rgba(156, 39, 176, 0.1);
+        }
+        
+        textarea {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #ddd;
+            border-radius: 6px;
+            font-size: 16px;
+            box-sizing: border-box;
+            resize: vertical;
+            min-height: 120px;
+            font-family: Arial, sans-serif;
+            transition: border-color 0.3s ease;
+        }
+        
+        textarea:focus {
+            outline: none;
+            border-color: #9c27b0;
+            box-shadow: 0 0 0 3px rgba(156, 39, 176, 0.1);
+        }
+        
+        .navigation {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin: 30px 0;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 8px;
+        }
+        
+        .nav-buttons {
+            display: flex;
+            gap: 15px;
+        }
+        
+        button {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 25px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            min-width: 120px;
+        }
+        
+        .btn-previous {
+            background-color: #6c757d;
+            color: white;
+        }
+        
+        .btn-previous:hover:not(:disabled) {
+            background-color: #5a6268;
+            transform: translateY(-2px);
+        }
+        
+        .btn-save {
+            background-color: #28a745;
+            color: white;
+            font-weight: bold;
+        }
+        
+        .btn-save:hover {
+            background-color: #218838;
+            transform: translateY(-2px);
+        }
+        
+        .btn-save.unsaved {
+            background-color: #ffc107;
+            color: #212529;
+        }
+        
+        .btn-save.unsaved:hover {
+            background-color: #e0a800;
+        }
+        
+        .btn-next {
+            background-color: #9c27b0;
+            color: white;
+        }
+        
+        .btn-next:hover:not(:disabled) {
+            background-color: #7b1fa2;
+            transform: translateY(-2px);
+        }
+        
+        button:disabled {
+            background-color: #ccc;
+            cursor: not-allowed;
+            transform: none;
+        }
+        
+        .location-counter {
+            font-size: 18px;
+            font-weight: bold;
+            color: #9c27b0;
+        }
+        
+        /* Icon Navigation */
+        .icon-navigation {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin: 20px 0;
+            flex-wrap: wrap;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 10px;
+        }
+        
+        .icon-btn {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 10px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            background: white;
+            border: 2px solid #e0e0e0;
+            min-width: 70px;
+        }
+        
+        .icon-btn:hover {
+            background: #9c27b0;
+            color: white;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+        }
+        
+        .icon-btn.active {
+            background: #9c27b0;
+            color: white;
+            border-color: #7b1fa2;
+        }
+        
+        .icon-btn .icon {
+            font-size: 24px;
+            margin-bottom: 5px;
+        }
+        
+        .icon-btn span {
+            font-size: 12px;
+            font-weight: 600;
+            text-align: center;
+        }
+        
+        /* Three Column Layout */
+        .three-column-layout {
+            display: grid;
+            grid-template-columns: 1fr 2fr 1fr;
+            gap: 20px;
+            margin: 20px 0;
+        }
+        
+        .column {
+            background: #fafafa;
+            padding: 20px;
+            border-radius: 8px;
+            border: 2px solid #e0e0e0;
+        }
+        
+        .column h3 {
+            margin-top: 0;
+            color: #9c27b0;
+            font-size: 18px;
+            text-align: center;
+            border-bottom: 2px solid #9c27b0;
+            padding-bottom: 10px;
+        }
+        
+        .location-info {
+            text-align: center;
+        }
+        
+        .location-title {
+            font-size: 24px;
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 10px;
+        }
+        
+        .location-number {
+            font-size: 16px;
+            color: #666;
+            background: #e9ecef;
+            padding: 5px 10px;
+            border-radius: 15px;
+            display: inline-block;
+        }
+        
+        .preview-content {
+            font-size: 14px;
+        }
+        
+        .preview-item {
+            margin-bottom: 15px;
+            padding: 10px;
+            background: white;
+            border-radius: 5px;
+            border-left: 4px solid #9c27b0;
+        }
+        
+        .preview-item strong {
+            display: block;
+            color: #9c27b0;
+            margin-bottom: 5px;
+        }
+        
+        .preview-item span {
+            color: #666;
+            word-break: break-word;
+        }
+        
+        .status-message {
+            padding: 15px;
+            margin: 20px 0;
+            border-radius: 6px;
+            display: none;
+            font-weight: 500;
+        }
+        
+        .status-success {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        
+        .status-error {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        
+        .status-warning {
+            background-color: #fff3cd;
+            color: #856404;
+            border: 1px solid #ffeaa7;
+        }
+        
+        .status-info {
+            background-color: #d1ecf1;
+            color: #0c5460;
+            border: 1px solid #bee5eb;
+        }
+        
+        @media (max-width: 768px) {
+            .container {
+                padding: 20px;
+                margin: 10px;
+            }
+            
+            .three-column-layout {
+                grid-template-columns: 1fr;
+                gap: 15px;
+            }
+            
+            .icon-navigation {
+                gap: 8px;
+                padding: 15px;
+            }
+            
+            .icon-btn {
+                min-width: 60px;
+                padding: 8px;
+            }
+            
+            .icon-btn .icon {
+                font-size: 20px;
+            }
+            
+            .icon-btn span {
+                font-size: 10px;
+            }
+            
+            .navigation {
+                flex-direction: column;
+                gap: 15px;
+            }
+            
+            .nav-buttons {
+                width: 100%;
+                justify-content: space-between;
+            }
+            
+            button {
+                min-width: 100px;
+                padding: 10px 16px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🗺️ Escape Room Locations Dashboard</h1>
+        
+        <!-- Quick Navigation Icons -->
+        <div class="icon-navigation">
+            <div class="icon-btn" data-location="0" title="Blokker">
+                <div class="icon">🔧</div>
+                <span>Blokker</span>
+            </div>
+            <div class="icon-btn" data-location="1" title="Boek">
+                <div class="icon">📚</div>
+                <span>Boek</span>
+            </div>
+            <div class="icon-btn" data-location="2" title="Electro">
+                <div class="icon">⚡</div>
+                <span>Electro</span>
+            </div>
+            <div class="icon-btn" data-location="3" title="Lijst">
+                <div class="icon">📋</div>
+                <span>Lijst</span>
+            </div>
+            <div class="icon-btn" data-location="4" title="Kerk">
+                <div class="icon">⛪</div>
+                <span>Kerk</span>
+            </div>
+            <div class="icon-btn" data-location="5" title="Brug">
+                <div class="icon">🌉</div>
+                <span>Brug</span>
+            </div>
+            <div class="icon-btn" data-location="6" title="Count">
+                <div class="icon">🧮</div>
+                <span>Count</span>
+            </div>
+            <div class="icon-btn" data-location="7" title="Gall">
+                <div class="icon">🍸</div>
+                <span>Gall</span>
+            </div>
+            <div class="icon-btn" data-location="8" title="Drog">
+                <div class="icon">🧪</div>
+                <span>Drog</span>
+            </div>
+        </div>
+        
+        <div id="statusMessage" class="status-message"></div>
+        
+        <!-- Three Column Layout -->
+        <div class="three-column-layout">
+            <!-- Column 1: Location Info -->
+            <div class="column location-column">
+                <h3>Location Info</h3>
+                <div id="locationInfo" class="location-info">
+                    <div class="location-title" id="locationTitle">Blokker</div>
+                    <div class="location-number" id="locationNumber">Loc 01</div>
+                </div>
+            </div>
+            
+            <!-- Column 2: Current Page -->
+            <div class="column page-column">
+                <h3 id="currentPageTitle">Blokker</h3>
+                <div class="form-group">
+                    <label for="heading">Heading</label>
+                    <input type="text" id="heading" placeholder="Enter heading...">
+                </div>
+                <div class="form-group">
+                    <label for="body">Body Text</label>
+                    <textarea id="body" placeholder="Enter description..."></textarea>
+                </div>
+                <div class="form-group">
+                    <label for="nextPage">Next Page URL</label>
+                    <input type="text" id="nextPage" placeholder="Enter next page URL...">
+                </div>
+            </div>
+            
+            <!-- Column 3: Next Page Preview -->
+            <div class="column preview-column">
+                <h3 id="nextPageTitle">Boek</h3>
+                <div class="preview-content">
+                    <div class="preview-item">
+                        <strong>Heading:</strong>
+                        <span id="nextHeading">-</span>
+                    </div>
+                    <div class="preview-item">
+                        <strong>Body:</strong>
+                        <span id="nextBody">-</span>
+                    </div>
+                    <div class="preview-item">
+                        <strong>Next Page:</strong>
+                        <span id="nextNextPage">-</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="navigation">
+            <div class="nav-buttons">
+                <button id="prevBtn" class="btn-previous">⬅️ Previous</button>
+                <button id="saveBtn" class="btn-save">💾 Save</button>
+                <button id="nextBtn" class="btn-next">Next ➡️</button>
+            </div>
+            <div class="location-counter" id="locationCounter">
+                Location 1 of 9
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Location data structure
+        const locations = [
+            { id: 'blokker', name: 'Blokker', heading: '', body: '', nextPage: '' },
+            { id: 'boek', name: 'Boek', heading: '', body: '', nextPage: '' },
+            { id: 'electro', name: 'Electro', heading: '', body: '', nextPage: '' },
+            { id: 'lijst', name: 'Lijst', heading: '', body: '', nextPage: '' },
+            { id: 'kerk', name: 'Kerk', heading: '', body: '', nextPage: '' },
+            { id: 'brug', name: 'Brug', heading: '', body: '', nextPage: '' },
+            { id: 'count', name: 'Count', heading: '', body: '', nextPage: '' },
+            { id: 'gall', name: 'Gall', heading: '', body: '', nextPage: '' },
+            { id: 'drog', name: 'Drog', heading: '', body: '', nextPage: '' }
+        ];
+        
+        let currentLocationIndex = 0;
+        let hasUnsavedChanges = false;
+        
+        // DOM elements
+        const prevBtn = document.getElementById('prevBtn');
+        const saveBtn = document.getElementById('saveBtn');
+        const nextBtn = document.getElementById('nextBtn');
+        const locationCounter = document.getElementById('locationCounter');
+        const statusMessage = document.getElementById('statusMessage');
+        const locationTitle = document.getElementById('locationTitle');
+        const locationNumber = document.getElementById('locationNumber');
+        const currentPageTitle = document.getElementById('currentPageTitle');
+        const nextPageTitle = document.getElementById('nextPageTitle');
+        const headingInput = document.getElementById('heading');
+        const bodyInput = document.getElementById('body');
+        const nextPageInput = document.getElementById('nextPage');
+        const nextHeading = document.getElementById('nextHeading');
+        const nextBody = document.getElementById('nextBody');
+        const nextNextPage = document.getElementById('nextNextPage');
+        
+        // Initialize dashboard
+        function init() {
+            renderLocation();
+            updateNavigation();
+            loadFromLocalStorage();
+            setupIconNavigation();
+        }
+        
+        // Setup icon navigation
+        function setupIconNavigation() {
+            const iconBtns = document.querySelectorAll('.icon-btn');
+            iconBtns.forEach(btn => {
+                btn.addEventListener('click', () => {
+                    const locationIndex = parseInt(btn.dataset.location);
+                    if (locationIndex !== currentLocationIndex) {
+                        saveCurrentLocation();
+                        currentLocationIndex = locationIndex;
+                        renderLocation();
+                        updateNavigation();
+                        updateIconNavigation();
+                    }
+                });
+            });
+        }
+        
+        // Update icon navigation active state
+        function updateIconNavigation() {
+            const iconBtns = document.querySelectorAll('.icon-btn');
+            iconBtns.forEach((btn, index) => {
+                if (index === currentLocationIndex) {
+                    btn.classList.add('active');
+                } else {
+                    btn.classList.remove('active');
+                }
+            });
+        }
+        
+        // Render current location
+        function renderLocation() {
+            const location = locations[currentLocationIndex];
+            const nextLocation = locations[currentLocationIndex + 1];
+            
+            // Update location info (Column 1)
+            locationTitle.textContent = location.name;
+            locationNumber.textContent = `Loc ${String(currentLocationIndex + 1).padStart(2, '0')}`;
+            
+            // Update current page (Column 2)
+            currentPageTitle.textContent = location.name;
+            headingInput.value = location.heading;
+            bodyInput.value = location.body;
+            nextPageInput.value = location.nextPage;
+            
+            // Update next page preview (Column 3)
+            if (nextLocation) {
+                nextPageTitle.textContent = nextLocation.name;
+                nextHeading.textContent = nextLocation.heading || '-';
+                nextBody.textContent = nextLocation.body || '-';
+                nextNextPage.textContent = nextLocation.nextPage || '-';
+            } else {
+                nextPageTitle.textContent = 'End';
+                nextHeading.textContent = '-';
+                nextBody.textContent = '-';
+                nextNextPage.textContent = '-';
+            }
+            
+            // Add change listeners
+            addChangeListeners();
+            updateIconNavigation();
+        }
+        
+        // Add change listeners to detect edits
+        function addChangeListeners() {
+            [headingInput, bodyInput, nextPageInput].forEach(input => {
+                input.removeEventListener('input', markAsUnsaved); // Remove existing listener
+                input.addEventListener('input', markAsUnsaved);
+            });
+        }
+        
+        // Mark as unsaved
+        function markAsUnsaved() {
+            hasUnsavedChanges = true;
+            saveBtn.textContent = '💾 Save *';
+            saveBtn.classList.add('unsaved');
+        }
+        
+        // Clear unsaved status
+        function clearUnsavedStatus() {
+            hasUnsavedChanges = false;
+            saveBtn.textContent = '💾 Save';
+            saveBtn.classList.remove('unsaved');
+        }
+        
+        // Update navigation
+        function updateNavigation() {
+            prevBtn.disabled = currentLocationIndex === 0;
+            nextBtn.disabled = currentLocationIndex === locations.length - 1;
+            locationCounter.textContent = `Location ${currentLocationIndex + 1} of ${locations.length}`;
+        }
+        
+        // Save current location data
+        function saveCurrentLocation() {
+            const location = locations[currentLocationIndex];
+            
+            location.heading = headingInput.value;
+            location.body = bodyInput.value;
+            location.nextPage = nextPageInput.value;
+            
+            // Save to localStorage
+            localStorage.setItem('escapeLocations', JSON.stringify(locations));
+            
+            clearUnsavedStatus();
+            showStatus('✅ Location saved successfully!', 'success');
+            
+            // Update preview for next location if we're editing the previous one
+            if (currentLocationIndex > 0) {
+                renderLocation(); // Refresh to update preview
+            }
+        }
+        
+        // Load from localStorage
+        function loadFromLocalStorage() {
+            const saved = localStorage.getItem('escapeLocations');
+            if (saved) {
+                try {
+                    const savedLocations = JSON.parse(saved);
+                    if (savedLocations.length === locations.length) {
+                        savedLocations.forEach((saved, index) => {
+                            if (locations[index]) {
+                                locations[index].heading = saved.heading || '';
+                                locations[index].body = saved.body || '';
+                                locations[index].nextPage = saved.nextPage || '';
+                            }
+                        });
+                        renderLocation();
+                        showStatus('📁 Data loaded from browser storage', 'info');
+                    }
+                } catch (e) {
+                    console.error('Error loading saved data:', e);
+                }
+            }
+        }
+        
+        // Show status message
+        function showStatus(message, type) {
+            statusMessage.textContent = message;
+            statusMessage.className = `status-message status-${type}`;
+            statusMessage.style.display = 'block';
+            
+            if (type === 'success') {
+                setTimeout(() => {
+                    statusMessage.style.display = 'none';
+                }, 3000);
+            }
+        }
+        
+        // Event listeners
+        prevBtn.addEventListener('click', () => {
+            if (currentLocationIndex > 0) {
+                saveCurrentLocation();
+                currentLocationIndex--;
+                renderLocation();
+                updateNavigation();
+            }
+        });
+        
+        nextBtn.addEventListener('click', () => {
+            if (currentLocationIndex < locations.length - 1) {
+                saveCurrentLocation();
+                currentLocationIndex++;
+                renderLocation();
+                updateNavigation();
+            }
+        });
+        
+        saveBtn.addEventListener('click', () => {
+            saveCurrentLocation();
+        });
+        
+        // Warn before leaving with unsaved changes
+        window.addEventListener('beforeunload', (e) => {
+            if (hasUnsavedChanges) {
+                e.preventDefault();
+                e.returnValue = 'You have unsaved changes. Are you sure you want to leave?';
+            }
+        });
+        
+        // Auto-save every 30 seconds
+        setInterval(() => {
+            if (hasUnsavedChanges) {
+                saveCurrentLocation();
+            }
+        }, 30000);
+        
+        // Initialize the dashboard
+        init();
+    </script>
+</body>
+</html>
