@@ -274,7 +274,7 @@ export default function PlayerPage({ params }: { params: Promise<{ locationSlug:
                 <div className="h-[30%] flex flex-col items-center justify-start pt-2 text-center px-5 w-full">
                   {step === 'direction' && (
                     <div className="absolute inset-0 z-[100] flex flex-col items-center overflow-hidden">
-                       <div className="absolute w-full px-6 flex flex-col items-center transition-all duration-1000 cubic-bezier(0.16, 1, 0.3, 1)" style={{ top: navPhase === 'verify' ? '35%' : '70%', transform: 'translateY(-50%)' }}>
+                       <div className="absolute w-full px-6 flex flex-col items-center transition-all duration-1000 cubic-bezier(0.16, 1, 0.3, 1)" style={{ top: navPhase === 'verify' ? '35%' : 'calc(70% - 20px)', transform: 'translateY(-50%)' }}>
                           <div className={`bg-white/95 backdrop-blur-xl rounded-[24px] p-6 shadow-2xl border-4 border-white/50 w-full max-w-sm animate-in fade-in zoom-in duration-1000 ${navPhase === 'verify' ? 'scale-90 opacity-40 blur-[1px]' : 'scale-100 opacity-100 blur-0'}`}>
                              <p className="text-[10px] text-gray-400 uppercase font-black tracking-[0.4em] mb-2 text-center">HUIDIGE BESTEMMING</p>
                              <div className="bg-[#003566]/10 py-3 rounded-xl border border-[#003566]/10">
