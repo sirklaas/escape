@@ -241,7 +241,7 @@ export default function PlayerPage({ params }: { params: Promise<{ locationSlug:
       : `${baseUrl}?travelmode=walking&dir_action=navigate`;
     
     setNavPhase('verify');
-    window.open(walkUrl, '_blank');
+    window.location.href = walkUrl; // Direct redirect for better reliability on mobile
   };
 
   const handleRevealHint = () => {
@@ -358,49 +358,52 @@ export default function PlayerPage({ params }: { params: Promise<{ locationSlug:
                 {/* 4-6. Message Zone (30 - 60%) - Top-Aligned under Logo */}
                 <div className="h-[30%] flex flex-col items-center justify-start pt-2 text-center px-5 w-full">
                   
-                  {/* PHASE A: MAP NAVIGATION (Absolute Positioning for Precision) */}
+                  {/* PHASE A & B: RESTRUCTURED NAVIGATION FLOW */}
                   {step === 'direction' && (
-                    <div className="absolute inset-0 z-50 flex flex-col items-center">
+                    <div className="absolute inset-0 z-[100] flex flex-col items-center overflow-hidden">
                        
-                       {/* 70% Anchor: Location Code */}
+                       {/* 70% Area Indicator: Lokatie Code */}
                        <div 
-                          className="absolute w-full flex flex-col items-center transition-all duration-1000 ease-in-out"
-                          style={{ top: '70%', transform: 'translateY(-50%)' }}
+                          className={`absolute w-full px-6 flex flex-col items-center transition-all duration-1000 cubic-bezier(0.16, 1, 0.3, 1)`}
+                          style={{ top: navPhase === 'verify' ? '35%' : '70%', transform: 'translateY(-50%)' }}
                        >
-                          <div className="bg-white/95 backdrop-blur-xl rounded-2xl p-5 shadow-2xl border-2 border-white/50 w-[calc(100%-60px)] max-w-sm animate-in fade-in zoom-in duration-700">
-                             <p className="text-[9px] text-gray-400 uppercase font-black tracking-[0.3em] mb-1 text-center">Lokatie Code</p>
-                             <p className="text-[#003566] text-xl font-black tracking-tight text-center" style={{ fontFamily: 'monospace' }}>
-                                { (loc?.mapUrl && loc.mapUrl.includes('/') ? loc.mapUrl.split('/').pop()?.split('?')[0]?.replace(/%20/g, ' ') : '5F9Q+M5 Leiden') }
-                             </p>
+                          <div className={`bg-white/95 backdrop-blur-xl rounded-[24px] p-6 shadow-2xl border-4 border-white/50 w-full max-w-sm animate-in fade-in zoom-in duration-1000 ${navPhase === 'verify' ? 'scale-90 opacity-40 blur-[1px]' : 'scale-100 opacity-100 blur-0'}`}>
+                             <p className="text-[10px] text-gray-400 uppercase font-black tracking-[0.4em] mb-2 text-center">HUIDIGE BESTEMMING</p>
+                             <div className="bg-[#003566]/10 py-3 rounded-xl border border-[#003566]/10">
+                                <p className="text-[#003566] text-2xl font-black tracking-tighter text-center" style={{ fontFamily: 'monospace' }}>
+                                   { (loc?.mapUrl && loc.mapUrl.includes('/') ? loc.mapUrl.split('/').pop()?.split('?')[0]?.replace(/%20/g, ' ') : '5F9Q+M5 LEIDEN') }
+                                </p>
+                             </div>
                           </div>
                        </div>
 
-                       {/* Fase 2 Content: Appears in the space between 70% and Bottom Button */}
+                       {/* Verification Content: Between Code and Bottom (Phase 2 Only) */}
                        <div 
-                          className={`absolute w-[calc(100%-60px)] max-w-sm flex flex-col gap-3 transition-all duration-700 ease-out z-30 ${navPhase === 'verify' ? 'opacity-100 translate-y-0 scale-100' : 'opacity-0 translate-y-20 scale-95 pointer-events-none'}`}
-                          style={{ top: '74%' }}
+                          className={`absolute w-full px-6 flex flex-col gap-4 transition-all duration-1000 cubic-bezier(0.16, 1, 0.3, 1) ${navPhase === 'verify' ? 'opacity-100 scale-100 translate-y-0' : 'opacity-0 scale-90 translate-y-20 pointer-events-none'}`}
+                          style={{ top: '48%' }}
                        >
-                          <div className="bg-white/90 backdrop-blur-lg rounded-xl p-4 shadow-xl border border-white/40 animate-in slide-in-from-bottom-5 duration-700">
-                             <h2 className="text-lg text-[#D62828] font-black uppercase tracking-wider mb-1 leading-tight">{renderText(loc?.heading) || 'Phase 2'}</h2>
-                             <p className="text-gray-700 font-medium text-[13px] leading-tight line-clamp-2">{renderText(loc?.body)}</p>
-                          </div>
-                          
-                          <div className="relative group">
-                            <input 
-                               type="text"
-                               value={answer}
-                               onChange={(e) => setAnswer(e.target.value)}
-                               onKeyDown={(e) => e.key === 'Enter' && checkAnswer()}
-                               placeholder="Typ je antwoord..."
-                               className={`w-full h-12 bg-white/95 border-2 ${alertState === 'wrong' ? 'border-red-500 text-red-600 animate-shake' : 'border-[#003566]/10 text-gray-900 focus:border-[#003566]'} rounded-xl text-center text-[17px] font-bold uppercase tracking-widest outline-none transition-all shadow-inner`}
-                               style={{ fontFamily: 'monospace' }}
-                            />
-                            {alertState === 'wrong' && <p className="absolute -bottom-5 left-0 right-0 text-[10px] text-red-500 font-bold text-center uppercase">Onjuist antwoord</p>}
+                          <div className="bg-white/95 backdrop-blur-md rounded-[20px] p-6 shadow-xl border-4 border-white/60 w-full max-w-sm animate-fluent-slide-up">
+                             <h2 className="text-2xl text-[#D62828] font-black uppercase tracking-wider mb-2 leading-tight">{renderText(loc?.heading) || 'Phase 2'}</h2>
+                             <p className="text-gray-800 font-medium text-[15px] leading-relaxed mb-4">{renderText(loc?.body)}</p>
+                             
+                             <div className="relative group">
+                                <input 
+                                   type="text"
+                                   id="verificationInput"
+                                   value={answer}
+                                   onChange={(e) => setAnswer(e.target.value)}
+                                   onKeyDown={(e) => e.key === 'Enter' && checkAnswer()}
+                                   placeholder="Typ je antwoord..."
+                                   autoFocus={navPhase === 'verify'}
+                                   className={`w-full h-14 bg-gray-50 border-4 ${alertState === 'wrong' ? 'border-red-500 text-red-600 animate-shake' : 'border-[#003566]/20 text-gray-900 focus:border-[#003566]'} rounded-xl text-center text-[19px] font-black uppercase tracking-widest outline-none transition-all shadow-inner`}
+                                   style={{ fontFamily: 'monospace' }}
+                                />
+                             </div>
                           </div>
                        </div>
 
                        {/* Persistent Bottom Button */}
-                       <div className="absolute bottom-10 w-[calc(100%-60px)] max-w-sm">
+                       <div className="absolute bottom-10 w-full px-6 max-w-sm flex justify-center">
                           <button 
                              onClick={(e) => {
                                e.stopPropagation();
@@ -410,12 +413,12 @@ export default function PlayerPage({ params }: { params: Promise<{ locationSlug:
                                  checkAnswer();
                                }
                              }}
-                             className={`w-full h-16 rounded-2xl border-4 text-[16px] font-black uppercase tracking-[0.2em] shadow-[0_10px_25px_rgba(0,0,0,0.2)] active:scale-95 transition-all duration-500 flex items-center justify-center gap-3 ${navPhase === 'maps' ? 'bg-white border-[#003566] text-[#003566]' : 'bg-[#003566] border-white text-white rotate-0'}`}
+                             className={`w-full h-20 rounded-[24px] border-4 text-[18px] font-black uppercase tracking-[0.2em] shadow-[0_20px_40px_rgba(0,0,0,0.4)] active:scale-95 transition-all duration-700 flex items-center justify-center gap-4 ${navPhase === 'maps' ? 'bg-white border-[#003566] text-[#003566] animate-pulse-slow' : 'bg-[#003566] border-white text-white'}`}
                           >
                              {navPhase === 'maps' ? (
-                               <>📍 OPEN MAPS</>
+                               <><span className="text-3xl">📍</span> OPEN MAPS</>
                              ) : (
-                               "WE ZIJN ER"
+                               "CONTROLEER"
                              )}
                           </button>
                        </div>
