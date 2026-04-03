@@ -25,10 +25,10 @@ const LOCATIONS = [
 
 // ── Helper: empty data structures ─────────────────────────────────────────────
 function emptyLocation(idx: number): EscapeLocation {
-  return { locationNumber: idx + 1, name: LOCATIONS[idx].name, heading: '', subheading: '', body: '', startUrl: '' };
+  return { locationNumber: idx + 1, name: LOCATIONS[idx].name, heading: '', subheading: '', body: '', startUrl: '', skip: false, mapUrl: '', verificationAnswer: '' };
 }
 function emptyPage(pageNum: number, locNum: number): EscapePage {
-  return { pageNumber: pageNum, locationNumber: locNum, kop: '', bodyTxt: '', correctAnswer: '', hints: ['','','',''], nextPage: '' };
+  return { pageNumber: pageNum, locationNumber: locNum, kop: '', bodyTxt: '', correctAnswer: '', hints: ['','','',''], nextPage: '', timerLimit: 600 };
 }
 function emptyVariant(): VariantData {
   const locations = LOCATIONS.map((_, i) => emptyLocation(i));
@@ -44,9 +44,9 @@ function emptyData(): EscapeData {
 }
 
 // ── Field Component ────────────────────────────────────────────────────────────
-function Field({ label, value, onChange, area, highlight }: {
-  label: string; value: string; onChange: (v: string) => void;
-  area?: boolean; highlight?: boolean;
+function Field({ label, value, onChange, area, highlight, type = 'text' }: {
+  label: string; value: string | number; onChange: (v: any) => void;
+  area?: boolean; highlight?: boolean; type?: string;
 }) {
   return (
     <div style={{ marginBottom: 10 }}>
@@ -69,9 +69,9 @@ function Field({ label, value, onChange, area, highlight }: {
         />
       ) : (
         <input
-          type="text"
+          type={type}
           value={value}
-          onChange={e => onChange(e.target.value)}
+          onChange={e => onChange(type === 'number' ? Number(e.target.value) : e.target.value)}
           placeholder={`Enter ${label.toLowerCase()}...`}
           style={{
             width: '100%', padding: '6px 8px',
@@ -84,6 +84,25 @@ function Field({ label, value, onChange, area, highlight }: {
           onBlur={e => e.target.style.borderColor = highlight ? '#ffc107' : '#dee2e6'}
         />
       )}
+    </div>
+  );
+}
+
+function CheckboxField({ label, checked, onChange }: {
+  label: string; checked: boolean; onChange: (v: boolean) => void;
+}) {
+  return (
+    <div style={{ marginBottom: 10, display: 'flex', alignItems: 'center', gap: 8 }}>
+      <input
+        type="checkbox"
+        id={label}
+        checked={checked}
+        onChange={e => onChange(e.target.checked)}
+        style={{ width: 16, height: 16, cursor: 'pointer' }}
+      />
+      <label htmlFor={label} style={{ fontWeight: 500, color: '#495057', fontSize: 13, cursor: 'pointer' }}>
+        {label}
+      </label>
     </div>
   );
 }
@@ -156,10 +175,10 @@ export default function DashboardPage() {
   const currentLocIdx = locationIndex;
   const currentVariantData = data[variant];
   const loc    = currentVariantData.locations[currentLocIdx]   ?? emptyLocation(currentLocIdx);
-  const page1  = currentVariantData.pages.find(p => p.locationNumber === currentLocIdx + 1 && p.pageNumber % 2 === 1) ?? emptyPage(currentLocIdx * 2 + 1, currentLocIdx + 1);
-  const page2  = currentVariantData.pages.find(p => p.locationNumber === currentLocIdx + 1 && p.pageNumber % 2 === 0) ?? emptyPage(currentLocIdx * 2 + 2, currentLocIdx + 1);
+  const page1  = currentVariantData.pages.find(p => p.locationNumber === currentLocIdx + 1 && (p.pageNumber === currentLocIdx * 2 + 1)) ?? emptyPage(currentLocIdx * 2 + 1, currentLocIdx + 1);
+  const page2  = currentVariantData.pages.find(p => p.locationNumber === currentLocIdx + 1 && (p.pageNumber === currentLocIdx * 2 + 2)) ?? emptyPage(currentLocIdx * 2 + 2, currentLocIdx + 1);
 
-  const updateLoc = (field: keyof EscapeLocation, value: string) => {
+  const updateLoc = (field: keyof EscapeLocation, value: any) => {
     setData(prev => ({
       ...prev,
       [variant]: {
@@ -170,7 +189,7 @@ export default function DashboardPage() {
     setUnsaved(true);
   };
 
-  const updatePage = (pageNum: number, field: keyof EscapePage, value: string | string[]) => {
+  const updatePage = (pageNum: number, field: keyof EscapePage, value: any) => {
     setData(prev => ({
       ...prev,
       [variant]: {
@@ -305,6 +324,9 @@ export default function DashboardPage() {
               <Field label="Sub Heading" value={loc.subheading} onChange={v => updateLoc('subheading', v)} />
               <Field label="Body"        value={loc.body}       onChange={v => updateLoc('body', v)} area  />
               <Field label="Start URL"   value={loc.startUrl}   onChange={v => updateLoc('startUrl', v)}   />
+              <Field label="Map URL"     value={loc.mapUrl ?? ''} onChange={v => updateLoc('mapUrl', v)} />
+              <Field label="Verificatie Antwoord" value={loc.verificationAnswer ?? ''} onChange={v => updateLoc('verificationAnswer', v)} highlight />
+              <CheckboxField label="SKIP" checked={!!loc.skip}  onChange={v => updateLoc('skip', v)}       />
             </>}
           </div>
         </div>
@@ -314,9 +336,16 @@ export default function DashboardPage() {
           <div style={{ padding: '12px 16px', background: '#f8f9fa', borderBottom: '1px solid #e9ecef' }}>
             <h3 style={{ fontWeight: 600, color: '#2c3e50', fontSize: 16, margin: 0 }}>Page {page1.pageNumber}</h3>
           </div>
-          <div style={{ padding: 12, flex: 1, overflowY: 'auto' }}>
+  <div style={{ padding: 12, flex: 1, overflowY: 'auto' }}>
             {loading ? <p style={{ color: '#6c757d', fontSize: 13 }}>Loading...</p> : <>
-              <Field label="Heading"        value={page1.kop}           onChange={v => updatePage(page1.pageNumber, 'kop', v)}           />
+              <div style={{ display: 'flex', gap: 10, alignItems: 'flex-start' }}>
+                <div style={{ flex: 1 }}>
+                  <Field label="Heading" value={page1.kop} onChange={v => updatePage(page1.pageNumber, 'kop', v)} />
+                </div>
+                <div style={{ width: 80 }}>
+                  <Field label="Timer (s)" type="number" value={page1.timerLimit ?? 600} onChange={v => updatePage(page1.pageNumber, 'timerLimit', v)} />
+                </div>
+              </div>
               <Field label="Body Text"      value={page1.bodyTxt}        onChange={v => updatePage(page1.pageNumber, 'bodyTxt', v)} area  />
               <Field label="Correct Answer" value={page1.correctAnswer}  onChange={v => updatePage(page1.pageNumber, 'correctAnswer', v)} highlight />
               {[0,1,2,3].map(i => (
@@ -335,9 +364,16 @@ export default function DashboardPage() {
           <div style={{ padding: '12px 16px', background: '#f8f9fa', borderBottom: '1px solid #e9ecef' }}>
             <h3 style={{ fontWeight: 600, color: '#2c3e50', fontSize: 16, margin: 0 }}>Page {page2.pageNumber}</h3>
           </div>
-          <div style={{ padding: 12, flex: 1, overflowY: 'auto' }}>
+  <div style={{ padding: 12, flex: 1, overflowY: 'auto' }}>
             {loading ? <p style={{ color: '#6c757d', fontSize: 13 }}>Loading...</p> : <>
-              <Field label="Heading"        value={page2.kop}           onChange={v => updatePage(page2.pageNumber, 'kop', v)}           />
+              <div style={{ display: 'flex', gap: 10, alignItems: 'flex-start' }}>
+                <div style={{ flex: 1 }}>
+                  <Field label="Heading" value={page2.kop} onChange={v => updatePage(page2.pageNumber, 'kop', v)} />
+                </div>
+                <div style={{ width: 80 }}>
+                  <Field label="Timer (s)" type="number" value={page2.timerLimit ?? 600} onChange={v => updatePage(page2.pageNumber, 'timerLimit', v)} />
+                </div>
+              </div>
               <Field label="Body Text"      value={page2.bodyTxt}        onChange={v => updatePage(page2.pageNumber, 'bodyTxt', v)} area  />
               <Field label="Correct Answer" value={page2.correctAnswer}  onChange={v => updatePage(page2.pageNumber, 'correctAnswer', v)} highlight />
               {[0,1,2,3].map(i => (

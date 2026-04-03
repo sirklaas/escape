@@ -1,60 +1,152 @@
 'use client';
 
 import { useEffect, useState, useCallback, use, useRef } from 'react';
-import { fetchEscapeData, type EscapeData, type GameVariant, type EscapePage, type EscapeLocation } from '@/lib/pb';
+import { fetchEscapeData, type EscapeData, type GameVariant, type EscapePage, type EscapeLocation, markLocationCompleted } from '@/lib/pb';
+import { getLeaderboardData, type LeaderboardEntry } from '@/app/actions';
 import { Loader2 } from 'lucide-react';
 
-// ── Constants from Legacy Code ───────────────────────────────────────────────
 const GAME_SETTINGS = {
-  hintButtonAppearTime: 120, // in seconds
-  timerIncrementInterval: 5, // in seconds
-  incorrectGuessPenalty: 25, // in seconds
-  challengeDuration: 600,    // 10 minutes (600s)
-  sounds: {
-    ping: 'https://www.crazy.local/button/sounds/Chime2.wav',
-    buzz: 'https://www.crazy.local/button/sounds/Expired.wav', 
-    doorbell: 'https://www.crazy.local/fun/sounds/doorbell.wav' 
-  }
+  hintButtonAppearTime: 120,
+  timerIncrementInterval: 5,
+  incorrectGuessPenalty: 25,
+  challengeDuration: 600,
+  sounds: { ping: '...', buzz: '...', doorbell: '...' }
 };
 
 const HINT_COSTS = [100, 200, 300, 400];
 
+function LeaderboardList() {
+  const [teams, setTeams] = useState<LeaderboardEntry[]>([]);
+  const [positions, setPositions] = useState<number[]>([]);
+  const [animating, setAnimating] = useState(false);
+
+  useEffect(() => {
+    async function load() {
+      const data = await getLeaderboardData();
+      setTeams(data);
+      
+      // Shuffle array for initial fallback vertical positions, simulating the legacy logic
+      let pos = [...Array(data.length).keys()];
+      for (let i = pos.length - 1; i > 0; i--) {
+          const j = Math.floor(Math.random() * (i + 1));
+          [pos[i], pos[j]] = [pos[j], pos[i]];
+      }
+      setPositions(pos);
+
+      // Force standard delay, then trigger CSS glide sort
+      setTimeout(() => setAnimating(true), 1000);
+    }
+    load();
+  }, []);
+
+  if (teams.length === 0) return <div className="text-gray-400 font-light mt-8 animate-pulse">Computing Ranks...</div>;
+
+  return (
+    <div className="relative w-[calc(100%-10px)] max-w-sm mt-6 mb-2">
+      {teams.map((team, index) => {
+        // Position defaults to random array ID, then glides to its final rank ID
+        const transformY = animating ? (index * 45) : ((positions[index] || 0) * 45);
+        
+        return (
+          <div 
+            key={team.teamName} 
+            className={`absolute top-0 left-0 w-full h-[40px] flex items-center transition-transform ${animating ? 'duration-[2000ms] ease-in-out' : 'duration-0'}`}
+            style={{ transform: `translateY(${transformY}px)` }}
+          >
+            {/* Rank Circle */}
+            <span className="w-8 h-8 shrink-0 bg-[#D62828] border-2 border-white rounded-full text-white flex justify-center items-center font-bold text-sm shadow-[0_0_0_1px_#D62828] mr-3">
+              {index + 1}
+            </span>
+            {/* Legacy Style Pill */}
+            <div className="flex-grow bg-white border-2 border-gray-300 rounded-full flex justify-between items-center px-4 h-[35px] shadow-sm">
+               <span className="font-medium text-gray-800 text-sm truncate max-w-[120px]" style={{ fontWeight: 400 }}>{team.teamName}</span>
+               <span className="text-gray-500 font-medium text-xs" style={{ fontWeight: 500 }}>
+                 {team.totalTime.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".")} sec
+               </span>
+            </div>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
 export default function PlayerPage({ params }: { params: Promise<{ locationSlug: string }> }) {
   const { locationSlug } = use(params);
 
-  // ── State ──────────────────────────────────────────────────────────────────
   const [data, setData] = useState<EscapeData | null>(null);
   const [loading, setLoading] = useState(true);
-  
   const [variant, setVariant] = useState<GameVariant>('city');
-  const [step, setStep] = useState<'intro' | 'puzzle1' | 'puzzle2' | 'finished'>('intro');
+  const [step, setStep] = useState<'direction' | 'verify' | 'intro' | 'puzzle' | 'video' | 'finished'>('intro');
+  const [currentPageNumber, setCurrentPageNumber] = useState(1);
+  const [isStarting, setIsStarting] = useState(false);
+  const [isPlaying, setIsPlaying] = useState(false);
+  const videoRef = useRef<HTMLVideoElement>(null);
+
+  const togglePlay = () => {
+    if (videoRef.current) {
+      if (isPlaying) {
+        videoRef.current.pause();
+      } else {
+        videoRef.current.play();
+      }
+      setIsPlaying(!isPlaying);
+    }
+  };
+
+  const renderText = (str: string = '') => {
+    return str.split('\\n').map((line, i) => (
+      <span key={i}>
+        {line}
+        {i !== str.split('\\n').length - 1 && <br />}
+      </span>
+    ));
+  };
+
+  useEffect(() => {
+    async function loadData() {
+      const gData = await fetchEscapeData();
+      if (gData) {
+        setData(gData);
+        
+        // Resolve exactly which Dashboard array object matches this URL slug integer
+        const locIndex = ['blokker', 'boek', 'electro', 'lijst', 'kerk', 'brug', 'count', 'gall', 'drog'].indexOf(locationSlug.toLowerCase());
+        const locNum = locIndex + 1;
+        
+        // Determine starting step dynamically based on the specific location's skip setting
+        const activeLoc = gData[variant]?.locations.find(l => l.locationNumber === locNum);
+        
+        // If skip is mathematically false (or completely missing/unchecked in DB), force Directional page
+        if (activeLoc && activeLoc.skip !== true) {
+           setStep('direction');
+        } else {
+           setStep('intro');
+        }
+      }
+      setLoading(false);
+    }
+    loadData();
+  }, [locationSlug, variant]);
+
   const [timer, setTimer] = useState(0);
   const [challengeTimer, setChallengeTimer] = useState(0);
   const [attempts, setAttempts] = useState(0);
   const [hintsRevealed, setHintsRevealed] = useState(0);
   const [showHintButton, setShowHintButton] = useState(false);
   const [answer, setAnswer] = useState('');
-  
-  // UI States
   const [alertState, setAlertState] = useState<'none' | 'wrong' | 'correct' | 'hint' | 'timeup'>('none');
   const [currentHintText, setCurrentHintText] = useState('');
-
-  const [teamName, setTeamName] = useState('Unknown Team');
-  const [isScoreSaved, setIsScoreSaved] = useState(false);
-
   const timerRef = useRef<NodeJS.Timeout | null>(null);
 
-  // ── Data Fetching ──────────────────────────────────────────────────────────
   const loadData = useCallback(async () => {
     setLoading(true);
     try {
-      const storedTeam = localStorage.getItem('escaperoomTeamName');
-      if (storedTeam) setTeamName(storedTeam);
-
       const pbData = await fetchEscapeData();
       if (pbData) {
         setData(pbData);
-        setVariant(pbData.activeVariant || 'city');
+        const activeV = pbData.activeVariant || 'city';
+        setVariant(activeV);
+        if (activeV === 'rat' || activeV === 'diner') setStep('puzzle');
       }
     } catch (err) {
       console.error('Failed to load game data:', err);
@@ -65,75 +157,49 @@ export default function PlayerPage({ params }: { params: Promise<{ locationSlug:
 
   useEffect(() => { loadData(); }, [loadData]);
 
-  // ── Game Logic ─────────────────────────────────────────────────────────────
-  const locationIndex = [
-    'blokker', 'boek', 'electro', 'lijst', 'kerk', 'brug', 'count', 'gall', 'drog'
-  ].indexOf(locationSlug.toLowerCase());
-
+  const locationIndex = ['blokker', 'boek', 'electro', 'lijst', 'kerk', 'brug', 'count', 'gall', 'drog'].indexOf(locationSlug.toLowerCase());
   const locNumber = locationIndex + 1;
-  const challengeNumber = locNumber; 
   const vData = data?.[variant];
   const loc = vData?.locations.find(l => l.locationNumber === locNumber);
-  const p1 = vData?.pages.find(p => p.locationNumber === locNumber && p.pageNumber === 1);
-  const p2 = vData?.pages.find(p => p.locationNumber === locNumber && p.pageNumber === 2);
+  const currentPageData = vData?.pages.find(p => p.locationNumber === locNumber && p.pageNumber === currentPageNumber);
 
-  const currentPageData = step === 'puzzle1' ? p1 : p2;
-
-  const saveScoreToPB = async (seconds: number) => {
-    console.log(`Saving score for ${teamName}: ${seconds}s (Challenge ${challengeNumber})`);
-  };
-
-  const playSound = (type: keyof typeof GAME_SETTINGS.sounds) => {
-    console.log(`[Sound] Playing ${type}`);
-  };
-
-  // Timer Tick
   useEffect(() => {
-    if (step === 'puzzle1' || step === 'puzzle2') {
+    if (step === 'puzzle') {
       timerRef.current = setInterval(() => {
         setTimer(prev => prev + GAME_SETTINGS.timerIncrementInterval);
         setChallengeTimer(prev => prev + GAME_SETTINGS.timerIncrementInterval);
       }, GAME_SETTINGS.timerIncrementInterval * 1000);
-
       const hintTimeout = setTimeout(() => setShowHintButton(true), GAME_SETTINGS.hintButtonAppearTime * 1000);
-
       return () => {
         if (timerRef.current) clearInterval(timerRef.current);
         clearTimeout(hintTimeout);
       };
     }
-  }, [step]);
+  }, [step, currentPageNumber]);
 
-  // Handle Challenge Expiry
   useEffect(() => {
-    if (challengeTimer >= GAME_SETTINGS.challengeDuration) {
+    const limit = currentPageData?.timerLimit ?? GAME_SETTINGS.challengeDuration;
+    if (challengeTimer >= limit) {
       if (timerRef.current) clearInterval(timerRef.current);
       setAlertState('timeup');
-      playSound('doorbell');
     }
-  }, [challengeTimer]);
+  }, [challengeTimer, currentPageData]);
 
   const handleStart = () => {
-    setStep('puzzle1');
-    setChallengeTimer(0);
-    setTimer(0);
-    setAttempts(0);
-    setHintsRevealed(0);
-    setShowHintButton(false);
-    setIsScoreSaved(false);
+    setIsStarting(true);
+    setTimeout(() => {
+      setStep('puzzle');
+      setCurrentPageNumber(1);
+      setIsStarting(false);
+    }, 800);
   };
 
   const handleCheck = async () => {
     if (!currentPageData) return;
     if (answer.toLowerCase().trim() === currentPageData.correctAnswer.toLowerCase().trim()) {
       if (timerRef.current) clearInterval(timerRef.current);
-      if (!isScoreSaved) {
-        setIsScoreSaved(true);
-        await saveScoreToPB(timer);
-      }
       setAlertState('correct');
     } else {
-      playSound('buzz');
       setAttempts(prev => prev + 1);
       setTimer(prev => prev + GAME_SETTINGS.incorrectGuessPenalty);
       setAlertState('wrong');
@@ -154,210 +220,312 @@ export default function PlayerPage({ params }: { params: Promise<{ locationSlug:
   };
 
   const proceedNext = () => {
+    // TODO: Save the accumulated seconds (timer) to PocketBase!
+    // This needs to be assigned to the active Game and Team session later.
     setAlertState('none');
-    if (step === 'puzzle1') {
-      setStep('puzzle2');
+    const nextP = vData?.pages.find(p => p.locationNumber === locNumber && p.pageNumber === currentPageNumber + 1);
+    if (nextP) {
+      setCurrentPageNumber(prev => prev + 1);
+      setTimer(0);
+      setChallengeTimer(0);
+      setAttempts(0);
       setHintsRevealed(0);
       setShowHintButton(false);
     } else {
-      setStep('finished');
+      setStep('video');
     }
   };
 
-  // ── Render Helpers ─────────────────────────────────────────────────────────
   if (loading) return <div className="min-h-screen flex items-center justify-center bg-white"><Loader2 className="animate-spin text-gray-500 w-8 h-8" /></div>;
   if (locationIndex === -1 || !data || !loc) return <div className="min-h-screen flex items-center justify-center text-gray-900 bg-white">Location Not Found</div>;
 
-  const dashArray = 2 * Math.PI * 45;
-  const progress = challengeTimer / GAME_SETTINGS.challengeDuration;
+  const dashArray = 2 * Math.PI * 38;
+  const currentLimit = currentPageData?.timerLimit ?? GAME_SETTINGS.challengeDuration;
+  const progress = challengeTimer / currentLimit;
   const dashOffset = dashArray * (1 - progress);
 
   return (
     <>
       <style jsx global>{`
-        @import url('https://fonts.googleapis.com/css2?family=Barlow+Semi+Condensed:wght@400;600;800&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Barlow+Semi+Condensed:wght@300;400;500;600;800&display=swap');
         body { font-family: 'Barlow Semi Condensed', sans-serif; margin: 0; padding: 0; background: white; overflow: hidden; }
       `}</style>
       
-      {/* Responsive Wrapper: Full screen on mobile, Phone Mockup on Desktop */}
       <div className="min-h-screen bg-gray-100 flex items-center justify-center p-0 md:p-10 overflow-auto">
-        
-        {/* Fake Phone Frame Mockup - Desktop only */}
-        <div className="w-full h-[100dvh] md:w-[380px] md:h-[800px] bg-black md:rounded-[60px] md:border-[8px] md:border-zinc-900 md:shadow-[0_0_0_2px_#222,0_25px_50px_-12px_rgba(0,0,0,0.5)] relative overflow-hidden flex flex-col">
-          
-          {/* Phone Notch / Dynamic Island */}
-          <div className="hidden md:flex absolute top-2 left-1/2 -translate-x-1/2 w-28 h-6 bg-black rounded-full z-[100] items-center justify-end px-3">
-             <div className="w-2 h-2 bg-zinc-800 rounded-full" />
-          </div>
-          
-          {/* Internal Screen Area - 20px white margin all sides */}
-          <div className="relative flex-1 overflow-hidden flex flex-col" style={{ background: 'white', padding: '20px' }}>
+        {/* Fake Phone Frame */}
+        <div className="w-full h-[100dvh] md:w-[380px] md:h-[800px] bg-black md:rounded-[60px] md:border-[8px] md:border-zinc-900 md:shadow-[0_25px_50px_-12px_rgba(0,0,0,0.5)] relative overflow-hidden flex flex-col">
+          <div className="relative flex-1 overflow-hidden flex flex-col h-full" style={{ background: 'white', padding: '20px' }}>
             
-            {/* The Inset Content Area - backdrop fills this entirely */}
-            <div 
-              className="relative flex-1 rounded-[20px] overflow-hidden flex flex-col items-center"
-              style={{ 
-                backgroundImage: 'url("/Escapebackdrop.jpg")', 
-                backgroundSize: 'cover', 
-                backgroundPosition: 'top center',
-                backgroundRepeat: 'no-repeat'
-              }}
-            >
-              {/* ── TIMER PILL — 20px from top, centered ── */}
-              {(step === 'puzzle1' || step === 'puzzle2') && (
-                <div style={{ position: 'absolute', top: '20px', left: '50%', transform: 'translateX(-50%)', zIndex: 50, whiteSpace: 'nowrap' }}>
-                  <div className="bg-white/95 backdrop-blur-md text-stone-900 px-6 py-1.5 rounded-full font-extrabold text-sm shadow-md border border-white/50">
-                    Timer: {timer}s
+            {/* 10-Part Grid Container Background */}
+            <div className="relative flex-1 rounded-[20px] overflow-hidden flex flex-col h-full bg-[#f8f8f8]" style={{ backgroundImage: step === 'video' ? 'none' : ( (step === 'direction' || step === 'verify') ? 'url("/Loc.jpg")' : 'url("/Escapebackdrop.jpg")'), backgroundSize: 'cover', backgroundPosition: 'top center', backgroundRepeat: 'no-repeat' }}>
+              
+              {/* Full-Screen Video Step Overlay */}
+              {step === 'video' && (
+                <div className="absolute inset-0 z-[200] bg-black flex flex-col items-center justify-center">
+                  <video 
+                    ref={videoRef} 
+                    src="/videos/tokenA.mp4" 
+                    playsInline 
+                    className="absolute inset-0 w-full h-full object-cover" 
+                    onEnded={() => setIsPlaying(false)}
+                    onPause={() => setIsPlaying(false)}
+                    onPlay={() => setIsPlaying(true)}
+                  />
+                  
+                  {/* Play Button Overlay */}
+                  {!isPlaying && (
+                    <button onClick={togglePlay} className="absolute inset-0 flex items-center justify-center bg-black/40 z-10 w-full h-full outline-none">
+                      <div className="w-24 h-24 bg-white/20 backdrop-blur-md rounded-full flex items-center justify-center border-4 border-white/50 pl-3 shadow-2xl transition-transform active:scale-90">
+                         <svg fill="white" viewBox="0 0 24 24" className="w-12 h-12"><path d="M8 5v14l11-7z" /></svg>
+                      </div>
+                    </button>
+                  )}
+
+                  {/* Yes Button (Fixed at Bottom) */}
+                  <div className="absolute bottom-8 z-20 w-[calc(100%-40px)] left-1/2 -translate-x-1/2">
+                    <button onClick={() => setStep('finished')} className="w-full h-16 bg-gradient-to-tr from-amber-400 to-yellow-200 text-[#003566] rounded-full border-4 border-white text-xl font-normal shadow-2xl active:scale-95 transition-all outline-none" style={{ fontWeight: 400 }}>
+                      Yes die hebben we
+                    </button>
                   </div>
                 </div>
               )}
 
-              {/* ── RED TIMER CIRCLE — 40px from bottom, centered ── */}
-              {(step === 'puzzle1' || step === 'puzzle2' || step === 'finished') && (
-                <div style={{ position: 'absolute', bottom: '40px', left: '50%', transform: 'translateX(-50%)', zIndex: 20, width: 64, height: 64, pointerEvents: 'none' }}>
-                  <svg width="64" height="64" viewBox="0 0 100 100">
-                    <circle className="stroke-gray-300 fill-none stroke-[8px] opacity-40" cx="50" cy="50" r="45" />
-                    <circle
-                      className="fill-none stroke-[#D62828] stroke-[10px] transition-all duration-500 ease-linear"
-                      cx="50" cy="50" r="45"
-                      transform="rotate(-90 50 50)"
-                      style={{ strokeDasharray: dashArray, strokeDashoffset: dashOffset, strokeLinecap: 'round' }}
-                    />
-                  </svg>
-                </div>
-              )}
-
-              {/* ── MAIN CONTENT CONTAINER — middle 50% of height (top 25% → bottom 25%) ── */}
-              <div style={{ position: 'absolute', top: '25%', bottom: '25%', left: 0, right: 0, zIndex: 10, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '0 24px', gap: '16px' }}>
-
-                {/* INTRO */}
-                {step === 'intro' && (
-                  <div className="w-full space-y-4 text-center animate-in fade-in zoom-in-95 duration-700">
-                    <h1 className="text-3xl font-black text-gray-900 uppercase tracking-tight leading-none drop-shadow-sm">
-                      {loc.name}
-                    </h1>
-                    <div className="space-y-1 p-3 bg-white/50 backdrop-blur-[2px] rounded-2xl">
-                      <h3 className="text-xl font-bold text-gray-800">{loc.heading}</h3>
-                      <p className="text-xs italic text-gray-600">&ldquo;{loc.subheading}&rdquo;</p>
-                      <p className="text-gray-900 text-sm leading-snug font-medium pt-1 line-clamp-4">{loc.body}</p>
+              {/* Vertical Grid Segments */}
+              <div className="flex-1 flex flex-col h-full w-full relative z-10 overflow-visible" style={{ opacity: step === 'video' ? 0 : 1, pointerEvents: step === 'video' ? 'none' : 'auto' }}>
+                
+                {/* 1. Timer Zone (0 - 10%) */}
+                <div className="h-[10%] flex items-center justify-center px-4 w-full">
+                  {step === 'puzzle' && (
+                    <div className="bg-stone-200/80 backdrop-blur-md text-stone-600 px-6 py-2 rounded-full font-light text-xl shadow-md border border-white/30 text-center tracking-wide w-full max-w-[280px]" style={{ fontWeight: 300 }}>
+                      Tijd: {timer} s
                     </div>
-                    <button
-                      onClick={handleStart}
-                      className="w-full py-4 bg-[#D62828] hover:bg-[#b52222] text-white rounded-full font-black text-xl uppercase tracking-tight shadow-[0_8px_16px_rgba(214,40,40,0.3)] transition-all active:scale-95"
+                  )}
+                </div>
+
+                {/* 2-3. Logo Zone (10 - 30%) - Whitespace for badge */}
+                <div className="h-[20%] w-full" />
+
+                {/* 4-6. Message Zone (30 - 60%) - Top-Aligned under Logo */}
+                <div className="h-[30%] flex flex-col items-center justify-start pt-2 text-center px-5 w-full">
+                  
+                  {/* PHASE A: MAP NAVIGATION */}
+                  {step === 'direction' && (
+                    <div className="w-full flex flex-col items-center mt-[15%] animate-in fade-in duration-800">
+                       
+                       {/* Location Heading & Instructions */}
+                       <div className="bg-white/95 backdrop-blur-md rounded-[20px] p-6 shadow-xl border-4 border-white/50 w-[calc(100%-4px)] max-w-sm mb-6">
+                         {loc?.heading ? (
+                           <h2 className="text-2xl text-[#D62828] font-black uppercase tracking-wider mb-2 leading-tight">{renderText(loc?.heading)}</h2>
+                         ) : (
+                           <h2 className="text-2xl text-[#D62828] font-black uppercase tracking-wider mb-2 leading-tight">Navigeer naar locatie</h2>
+                         )}
+                         <p className="text-gray-800 font-medium text-[15px]">Open de map hieronder en loop er direct heen.</p>
+                       </div>
+
+                       {loc?.mapUrl && (
+                          <a href={loc.mapUrl} target="_blank" rel="noopener noreferrer" 
+                             className="bg-white border-4 border-[#003566] text-[#003566] text-[17px] font-black uppercase tracking-widest px-8 py-5 rounded-[20px] shadow-2xl flex items-center justify-center gap-3 active:scale-95 transition-transform w-[calc(100%-4px)] max-w-sm">
+                             <span className="text-3xl">📍</span> OPEN MAPS
+                          </a>
+                       )}
+                    </div>
+                  )}
+
+                  {/* PHASE B: PHYSICAL VERIFICATION */}
+                  {step === 'verify' && (
+                    <div className="w-full flex flex-col items-center animate-in slide-in-from-bottom-5 duration-500 mt-[15%]">
+                       <div className="bg-white/95 backdrop-blur-md rounded-[20px] p-6 shadow-xl border-4 border-white/60 w-[calc(100%-4px)] max-w-sm mb-4">
+                         <h2 className="text-2xl text-[#D62828] font-black uppercase tracking-wider mb-2 leading-tight">{renderText(loc?.heading)}</h2>
+                         <h3 className="text-[17px] text-[#003566] font-bold mb-4">{renderText(loc?.subheading)}</h3>
+                         <p className="text-gray-800 font-medium text-[15px] leading-relaxed whitespace-pre-line">{renderText(loc?.body)}</p>
+                       </div>
+                       
+                       <div className="w-[calc(100%-4px)] max-w-sm flex flex-col items-center z-20">
+                          <input 
+                            type="text"
+                            value={answer}
+                            onChange={(e) => setAnswer(e.target.value)}
+                            placeholder="Typ je antwoord..."
+                            className={`w-full h-14 bg-white border-4 ${alertState === 'wrong' ? 'border-red-500 text-red-600 shadow-[0_0_15px_rgba(239,68,68,0.5)]' : 'border-gray-300 text-gray-900 focus:border-[#003566]'} rounded-xl text-center text-[19px] font-bold uppercase tracking-widest outline-none transition-all placeholder:text-gray-300 placeholder:font-medium`}
+                            style={{ fontFamily: 'monospace' }}
+                          />
+                       </div>
+                    </div>
+                  )}
+
+                  {step === 'intro' && (
+                    <div className={`space-y-4 w-full transition-all duration-700 ${isStarting ? 'opacity-0 scale-95' : 'opacity-100 scale-100'}`}>
+                      <h3 className="text-2xl text-gray-900 leading-tight" style={{ fontWeight: 400 }}>{renderText(data?.[variant]?.pages.find(p => p.locationNumber === locNumber && p.pageNumber === 1)?.kop)}</h3>
+                      <p className="text-gray-900 text-lg font-light leading-snug" style={{ fontWeight: 300 }}>{renderText(data?.[variant]?.pages.find(p => p.locationNumber === locNumber && p.pageNumber === 1)?.bodyTxt)}</p>
+                    </div>
+                  )}
+                  {step === 'puzzle' && (
+                    <div className="space-y-4 w-full animate-in fade-in duration-1000">
+                      <h2 className="text-2xl text-gray-900 leading-tight" style={{ fontWeight: 400 }}>{renderText(currentPageData?.kop)}</h2>
+                      <p className="text-lg font-light text-gray-800 leading-normal" style={{ fontWeight: 300 }}>{renderText(currentPageData?.bodyTxt)}</p>
+                    </div>
+                  )}
+                  {step === 'finished' && (
+                    <div className="w-full h-full flex flex-col items-center justify-start animate-in fade-in duration-1000 pt-2">
+                      <h2 className="text-4xl text-[#003566] font-black uppercase tracking-widest leading-tight drop-shadow-sm z-10">Leaderboard</h2>
+                      <LeaderboardList />
+                    </div>
+                  )}
+                </div>
+
+                {/* Main Popup Overlay (26% Height, centered over 6, 7, 8 segments) */}
+                {(alertState === 'correct' || alertState === 'hint' || alertState === 'wrong') && (
+                  <div className="absolute left-0 right-0 top-[65%] -translate-y-1/2 z-[100] h-[26%] flex items-center justify-center pointer-events-none">
+                    <style>{`
+                      @keyframes precisionSlideUp {
+                        0% { transform: translateY(100%); opacity: 0; }
+                        100% { transform: translateY(0); opacity: 1; }
+                      }
+                    `}</style>
+                    <div 
+                      key={alertState}
+                      className="w-[calc(100%-40px)] mx-auto h-full pointer-events-auto"
+                      style={{ 
+                        animation: 'precisionSlideUp 3s cubic-bezier(0.16, 1, 0.3, 1) forwards',
+                      }}
                     >
-                      Start
-                    </button>
+                      {alertState === 'wrong' && (
+                         <div className="bg-[#D62828] text-white p-8 rounded-[40px] border-4 border-white shadow-2xl w-full h-full flex flex-col items-center">
+                            <div className="flex-1" />
+                            <div className="text-center space-y-1">
+                               <p className="text-xl font-black leading-tight">Helaas...</p>
+                               <p className="text-[11px] font-normal" style={{ fontWeight: 400 }}>Dat is niet goed</p>
+                            </div>
+                            <div className="flex-1" />
+                            <button onClick={() => setAlertState('none')} className="w-14 h-14 mb-2 bg-[#003566] text-white rounded-full border-4 border-white text-base font-medium shadow-xl active:scale-95 transition-all flex items-center justify-center shrink-0">OK</button>
+                            <div className="flex-1" />
+                         </div>
+                      )}
+                      {(alertState === 'correct' || alertState === 'hint') && (
+                        <div className="bg-gradient-to-tr from-amber-400 to-yellow-200 p-8 rounded-[40px] border-4 border-white shadow-2xl w-full h-full flex flex-col items-center">
+                          <div className="flex-1" />
+                          {alertState === 'correct' ? (
+                            <div className="text-[#003566] text-center space-y-2">
+                               <p className="text-xl font-black leading-tight">Geweldig gedaan !</p>
+                               <p className="text-[12px] font-normal leading-relaxed" style={{ fontWeight: 400 }}>
+                                  Jullie hadden {challengeTimer} seconden nodig voor deze opdracht.<br/>
+                                  Gauw naar de volgende
+                               </p>
+                            </div>
+                          ) : (
+                            <div className="text-gray-800 text-center space-y-1">
+                               <p className="text-[12px] font-medium leading-tight px-4">Hint: {currentHintText}</p>
+                            </div>
+                          )}
+                          <div className="flex-1" />
+                          <button onClick={alertState === 'correct' ? proceedNext : () => setAlertState('none')} className="w-14 h-14 mb-2 bg-[#003566] text-white rounded-full border-4 border-white text-base font-medium shadow-xl active:scale-95 transition-all flex items-center justify-center shrink-0">OK</button>
+                          <div className="flex-1" />
+                        </div>
+                      )}
+                    </div>
                   </div>
                 )}
 
-                {/* PUZZLE */}
-                {(step === 'puzzle1' || step === 'puzzle2') && (
-                  <div className="w-full flex flex-col items-center gap-4 animate-in fade-in slide-in-from-bottom-10 duration-500">
-
-                    {/* Heading + Body */}
-                    <div className="w-full text-center bg-white/40 backdrop-blur-[2px] rounded-2xl p-3">
-                      <h2 className="text-xl font-black uppercase text-gray-900 leading-tight mb-1">
-                        {currentPageData?.kop}
-                      </h2>
-                      <p className="text-sm font-semibold text-gray-800 leading-normal italic">
-                        {currentPageData?.bodyTxt}
-                      </p>
-                    </div>
-
-                    {/* Answer input */}
-                    <input
-                      type="text"
-                      value={answer}
-                      onChange={(e) => setAnswer(e.target.value)}
-                      onKeyDown={(e) => e.key === 'Enter' && handleCheck()}
-                      placeholder="Antwoord..."
-                      className="w-full h-12 rounded-full border-2 border-gray-300 text-center text-lg font-bold text-gray-900 focus:border-[#D62828] outline-none shadow-xl bg-white/95 transition-all"
-                    />
-
-                    {/* Poging counter | Check button */}
-                    <div className="flex items-center justify-between w-full">
-                      <div className="text-gray-900 font-extrabold text-[11px] bg-white/70 px-3 py-1 rounded-full border border-gray-200">
-                        Poging: {attempts}
+                {/* 7-8. Interactive Zone (60 - 80%) */}
+                <div className="h-[20%] relative flex flex-col items-center justify-center w-full gap-4 overflow-visible">
+                  {step === 'intro' && (
+                    <button onClick={handleStart} className={`w-[100px] h-[100px] bg-[#D62828] text-white rounded-full border-4 border-white text-xl font-medium shadow-2xl active:scale-95 transition-all flex items-center justify-center transform ${isStarting ? 'opacity-0 scale-90' : 'opacity-100 scale-100'} duration-700`}>START</button>
+                  )}
+                  {step === 'puzzle' && (
+                    <>
+                      <div className="w-[calc(100%-40px)] mx-auto">
+                        <input type="text" value={answer} onChange={(e) => setAnswer(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && handleCheck()} placeholder="Wat denken jullie?" className="w-full h-7 rounded-full border-2 border-gray-200 text-center text-sm font-light focus:border-[#D62828] outline-none shadow-sm bg-white/95 transition-all px-8 placeholder:text-gray-300" style={{ fontWeight: 300 }} />
                       </div>
-                      <button
-                        onClick={handleCheck}
-                        className="px-8 py-2 bg-[#D62828] text-white rounded-2xl font-black text-base uppercase shadow-lg active:scale-95 transition-all"
+                      <div className="flex items-center justify-between w-[calc(100%-40px)] gap-4 mx-auto">
+                        <div className="w-1/3 h-7 flex items-center justify-center text-gray-900 font-light text-xs bg-white/90 rounded-full border border-gray-100 shadow-sm" style={{ fontWeight: 300 }}>Poging: {attempts}</div>
+                        <button onClick={handleCheck} className="w-1/3 h-7 bg-[#D62828] text-white rounded-full font-light text-sm shadow-lg active:scale-95 transition-all" style={{ fontWeight: 300 }}>Check</button>
+                      </div>
+                      <div className="absolute -bottom-4 left-1/2 -translate-x-1/2">
+                        <button onClick={handleRevealHint} className={`px-5 py-2 bg-white/90 border border-gray-200 text-gray-800 rounded-full font-black text-[10px] transition-all duration-1000 shadow-sm whitespace-nowrap ${showHintButton ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}>💡 Hint kopen {hintsRevealed < 4 ? `(-${HINT_COSTS[hintsRevealed]}s)` : ''}</button>
+                      </div>
+                    </>
+                  )}
+
+                </div>
+
+
+                {/* 9-10. Footer Zone (80 - 100%) - Red Circle Timer & Done Button */}
+                <div className="h-[20%] flex items-center justify-center w-full relative">
+                  {step === 'puzzle' && (
+                    <div className="w-[80px] h-[80px] relative">
+                      <svg width="80" height="80" viewBox="0 0 100 100">
+                        <circle className="stroke-gray-300 fill-none stroke-[12px] opacity-40" cx="50" cy="50" r="38" />
+                        <circle className="fill-none stroke-[#D62828] stroke-[15px] transition-all duration-500 ease-linear" cx="50" cy="50" r="38" transform="rotate(-90 50 50)" style={{ strokeDasharray: dashArray, strokeDashoffset: dashOffset, strokeLinecap: 'round' }} />
+                      </svg>
+                    </div>
+                  )}
+                  {step === 'finished' && (
+                    <div className="absolute bottom-8 z-20 w-[calc(100%-40px)] left-1/2 -translate-x-1/2">
+                      <button 
+                        onClick={async () => {
+                           // Persist the completed location securely in the PocketBase team session
+                           await markLocationCompleted('team_alpha', locationSlug, 0);
+                           window.location.href = '/nine';
+                        }} 
+                        className="w-full h-16 bg-[#003566] text-white rounded-full border-4 border-white text-xl font-normal shadow-2xl active:scale-95 transition-all outline-none" 
+                        style={{ fontWeight: 400 }}
                       >
-                        Check
+                        Gauw de volgende doen
                       </button>
                     </div>
-
-                    {/* Hint button */}
-                    <button
-                      onClick={handleRevealHint}
-                      className={`px-5 py-2.5 bg-white/90 border border-gray-200 text-gray-800 rounded-2xl font-black uppercase text-[10px] tracking-tight transition-all duration-1000 shadow-sm ${showHintButton ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}
-                    >
-                      💡 Hint kopen {hintsRevealed < 4 ? `(-${HINT_COSTS[hintsRevealed]}s)` : ''}
-                    </button>
-                  </div>
-                )}
-
-                {/* FINISHED */}
-                {step === 'finished' && (
-                  <div className="text-center space-y-6 animate-in zoom-in-95 duration-1000 w-full">
-                    <h1 className="text-4xl font-black text-gray-900 uppercase italic leading-none">Victory!</h1>
-                    <div className="bg-white/60 backdrop-blur-md p-6 rounded-3xl border border-white text-gray-900 shadow-xl">
-                      <p className="text-xs font-black uppercase opacity-60 mb-2 tracking-widest">Coördinaten</p>
-                      <div className="text-2xl font-black text-[#D62828] break-all leading-tight">
-                        {p2?.nextPage || 'DONE!'}
-                      </div>
+                  )}
+                  {/* Phase A Button */}
+                  {step === 'direction' && (
+                    <div className="absolute bottom-8 z-20 w-[calc(100%-40px)] left-1/2 -translate-x-1/2">
+                      <button onClick={() => {
+                          // Crucial Routing Logic: Only force verification question if it's explicitly set in the DB
+                          if (loc?.verificationAnswer && loc.verificationAnswer.trim() !== '') {
+                             setStep('verify');
+                          } else {
+                             setStep('intro');
+                          }
+                      }} className="w-full h-16 bg-[#003566] text-white rounded-full border-4 border-white text-xl font-normal shadow-2xl active:scale-95 transition-all outline-none" style={{ fontWeight: 400 }}>
+                        WE ZIJN ER
+                      </button>
                     </div>
-                  </div>
-                )}
+                  )}
+
+                  {/* Phase B Check Button */}
+                  {step === 'verify' && (
+                    <div className="absolute bottom-8 z-20 w-[calc(100%-40px)] left-1/2 -translate-x-1/2">
+                      <button onClick={() => {
+                          if (!loc?.verificationAnswer) return;
+                          
+                          if (answer.toLowerCase().trim() === loc.verificationAnswer.toLowerCase().trim()) {
+                             setAnswer('');
+                             setAlertState('none');
+                             setStep('intro'); // Correct! Jump to puzzle sequence!
+                          } else {
+                             setAlertState('wrong');
+                             setTimeout(() => setAlertState('none'), 3000);
+                          }
+                      }} className="w-full h-16 bg-[#D62828] text-white rounded-full border-4 border-white text-[19px] font-normal shadow-[0_0_15px_rgba(214,40,40,0.6)] active:scale-95 transition-all outline-none tracking-wide" style={{ fontWeight: 600 }}>
+                        CONTROLEER ANTWOORD
+                      </button>
+                    </div>
+                  )}
+                </div>
 
               </div>
 
             </div>
-
-            {/* Mockup Details (Desktop only) */}
-            <div className="hidden md:block absolute bottom-3 left-1/2 -translate-x-1/2 w-32 h-1.5 bg-zinc-800 rounded-full opacity-60" />
           </div>
         </div>
 
-        {/* ── ALERTS (Fixed position relative to viewport) ───────────────────── */}
-        <div className={`fixed inset-x-0 bottom-20 p-6 transition-all duration-500 z-[2000] flex justify-center pointer-events-none ${alertState === 'wrong' ? 'translate-y-0 opacity-100' : 'translate-y-20 opacity-0'}`}>
-          <div className="bg-[#D62828] text-white p-5 rounded-2xl w-full max-w-[280px] shadow-2xl flex items-center gap-3 border-2 border-white/30 italic font-bold">
-            <div className="text-2xl">!</div>
-            <p>Onjuist!</p>
-          </div>
-        </div>
-
-        {alertState === 'correct' && (
-          <div className="fixed inset-0 z-[3000] flex items-center justify-center p-6 animate-in fade-in duration-500">
-            <div className="absolute inset-0 bg-white/70 backdrop-blur-md" />
-            <div className="relative bg-gradient-to-b from-amber-400 to-amber-100 p-8 rounded-[40px] border-4 border-white shadow-2xl w-full max-w-[280px] text-center space-y-6">
-              <h1 className="text-[#003566] text-3xl font-black uppercase leading-none italic">Geweldig</h1>
-              <p className="text-[#003566] text-lg font-bold">Tijd: {timer} s</p>
-              <button onClick={proceedNext} className="w-16 h-16 rounded-full bg-[#003566] text-white border-4 border-white font-black text-2xl flex items-center justify-center mx-auto shadow-xl active:scale-95 transition-all">OK</button>
-            </div>
-          </div>
-        )}
-
-        {alertState === 'hint' && (
-          <div className="fixed inset-0 z-[3000] flex items-center justify-center p-6 animate-in fade-in zoom-in-95 duration-500">
-            <div className="absolute inset-0 bg-black/40" onClick={() => setAlertState('none')} />
-            <div className="relative bg-white p-10 rounded-[40px] border-4 border-amber-400 shadow-2xl w-full max-w-[280px] text-center">
-              <button onClick={() => setAlertState('none')} className="absolute top-2 right-5 text-gray-400 text-4xl font-bold">&times;</button>
-              <div className="text-amber-500 font-bold uppercase text-xs mb-3">Hint</div>
-              <p className="text-gray-800 text-lg font-bold italic">{currentHintText}</p>
-            </div>
-          </div>
-        )}
-
+        {/* TIME UP Alert - Still full screen for urgency */}
         {alertState === 'timeup' && (
-           <div className="fixed inset-0 z-[4000] flex items-center justify-center p-6 bg-[#D62828]/95 animate-in fade-in duration-500">
-             <div className="text-center p-10 space-y-8 animate-out slide-out-to-top-[100%] fill-mode-forwards duration-[4500ms]">
-                <h1 className="text-6xl font-black text-white uppercase italic leading-none">Tijd Op!</h1>
-                <button onClick={() => window.location.href = '/'} className="bg-white text-[#D62828] px-8 py-3 rounded-full font-black uppercase text-lg shadow-2xl">Volgende</button>
+           <div className="fixed inset-0 z-[4000] flex items-center justify-center p-6 bg-[#D62828]/95 animate-in fade-in duration-500 text-center text-white">
+             <div className="space-y-8">
+                <h1 className="text-6xl font-black italic leading-none">Tijd Op!</h1>
+                <button onClick={() => window.location.href = '/'} className="bg-white text-[#D62828] px-8 py-3 rounded-full font-black text-xl shadow-2xl active:scale-95 transition-all">VOLGENDE</button>
              </div>
-          </div>
+           </div>
         )}
-
       </div>
     </>
   );
