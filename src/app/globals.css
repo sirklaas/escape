@@ -91,3 +91,16 @@ textarea { resize: vertical; min-height: 56px; }
   to { opacity: 1; transform: translateY(0); }
 }
 .slide-in { animation: slide-in 0.2s ease; }
+
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(-5px); }
+  75% { transform: translateX(5px); }
+}
+.animate-shake { animation: shake 0.2s ease-in-out 0s 2; }
+
+@keyframes fluent-slide-up {
+  from { opacity: 0; transform: translateY(30px) scale(0.95); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+.animate-fluent-slide-up { animation: fluent-slide-up 0.8s cubic-bezier(0.16, 1, 0.3, 1); }

@@ -134,8 +134,8 @@ export default function PlayerPage({ params }: { params: Promise<{ locationSlug:
   const [hintsRevealed, setHintsRevealed] = useState(0);
   const [showHintButton, setShowHintButton] = useState(false);
   const [answer, setAnswer] = useState('');
-  const [hasOpenedMaps, setHasOpenedMaps] = useState(false);
-  const [alertState, setAlertState] = useState<'none' | 'wrong' | 'correct' | 'hint' | 'timeup'>('none');
+  const [navPhase, setNavPhase] = useState<'maps' | 'verify'>('maps');
+  const [alertState, setAlertState] = useState<'none' | 'correct' | 'wrong' | 'timeup' | 'hint'>('none');
   const [currentHintText, setCurrentHintText] = useState('');
   const timerRef = useRef<NodeJS.Timeout | null>(null);
 
@@ -229,11 +229,18 @@ export default function PlayerPage({ params }: { params: Promise<{ locationSlug:
 
   const handleOpenMaps = () => {
     if (!loc?.mapUrl) return;
-    const walkUrl = loc.mapUrl.includes('?') 
-      ? `${loc.mapUrl}&travelmode=walking&dir_action=navigate` 
-      : `${loc.mapUrl}?travelmode=walking&dir_action=navigate`;
     
-    setHasOpenedMaps(true);
+    let baseUrl = loc.mapUrl;
+    // If it's just a Plus Code like "5F9Q+M5, Leiden", turn it into a query
+    if (!baseUrl.startsWith('http')) {
+      baseUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(baseUrl)}`;
+    }
+
+    const walkUrl = baseUrl.includes('?') 
+      ? `${baseUrl}&travelmode=walking&dir_action=navigate` 
+      : `${baseUrl}?travelmode=walking&dir_action=navigate`;
+    
+    setNavPhase('verify');
     window.open(walkUrl, '_blank');
   };
 
@@ -351,44 +358,62 @@ export default function PlayerPage({ params }: { params: Promise<{ locationSlug:
                 {/* 4-6. Message Zone (30 - 60%) - Top-Aligned under Logo */}
                 <div className="h-[30%] flex flex-col items-center justify-start pt-2 text-center px-5 w-full">
                   
-                  {/* PHASE A: MAP NAVIGATION */}
+                  {/* PHASE A: MAP NAVIGATION (Absolute Positioning for Precision) */}
                   {step === 'direction' && (
-                    <div className="w-full flex flex-col items-center mt-[5%] animate-in fade-in duration-800">
+                    <div className="absolute inset-0 z-50 flex flex-col items-center">
                        
-                       {/* Location Heading & Instructions */}
-                       <div className="bg-white/95 backdrop-blur-md rounded-[20px] p-6 shadow-xl border-4 border-white/50 w-[calc(100%-4px)] max-w-sm mb-6">
-                         {loc?.heading ? (
-                           <h2 className="text-2xl text-[#D62828] font-black uppercase tracking-wider mb-2 leading-tight">{renderText(loc?.heading)}</h2>
-                         ) : (
-                           <h2 className="text-2xl text-[#D62828] font-black uppercase tracking-wider mb-2 leading-tight">Navigeer naar locatie</h2>
-                         )}
-                         <p className="text-gray-800 font-medium text-[15px] mb-4">Open de map hieronder en loop er direct heen.</p>
-                         
-                         {/* Location Code Display (Plus Code style) */}
-                         <div className="bg-gray-100 rounded-lg p-3 border border-gray-200">
-                           <p className="text-[10px] text-gray-400 uppercase font-bold tracking-widest mb-1">Lokatie Code</p>
-                           <p className="text-[#003566] text-lg font-black tracking-tight" style={{ fontFamily: 'monospace' }}>
-                             [{ (loc?.mapUrl && loc.mapUrl.includes('/') ? loc.mapUrl.split('/').pop()?.split('?')[0]?.replace(/%20/g, ' ') : '5F9Q+M5 Leiden') }]
-                           </p>
-                         </div>
+                       {/* 70% Anchor: Location Code */}
+                       <div 
+                          className="absolute w-full flex flex-col items-center transition-all duration-1000 ease-in-out"
+                          style={{ top: '70%', transform: 'translateY(-50%)' }}
+                       >
+                          <div className="bg-white/95 backdrop-blur-xl rounded-2xl p-5 shadow-2xl border-2 border-white/50 w-[calc(100%-60px)] max-w-sm animate-in fade-in zoom-in duration-700">
+                             <p className="text-[9px] text-gray-400 uppercase font-black tracking-[0.3em] mb-1 text-center">Lokatie Code</p>
+                             <p className="text-[#003566] text-xl font-black tracking-tight text-center" style={{ fontFamily: 'monospace' }}>
+                                { (loc?.mapUrl && loc.mapUrl.includes('/') ? loc.mapUrl.split('/').pop()?.split('?')[0]?.replace(/%20/g, ' ') : '5F9Q+M5 Leiden') }
+                             </p>
+                          </div>
                        </div>
 
-                       <div className="flex flex-col gap-4 w-[calc(100%-4px)] max-w-sm">
+                       {/* Fase 2 Content: Appears in the space between 70% and Bottom Button */}
+                       <div 
+                          className={`absolute w-[calc(100%-60px)] max-w-sm flex flex-col gap-3 transition-all duration-700 ease-out z-30 ${navPhase === 'verify' ? 'opacity-100 translate-y-0 scale-100' : 'opacity-0 translate-y-20 scale-95 pointer-events-none'}`}
+                          style={{ top: '74%' }}
+                       >
+                          <div className="bg-white/90 backdrop-blur-lg rounded-xl p-4 shadow-xl border border-white/40 animate-in slide-in-from-bottom-5 duration-700">
+                             <h2 className="text-lg text-[#D62828] font-black uppercase tracking-wider mb-1 leading-tight">{renderText(loc?.heading) || 'Phase 2'}</h2>
+                             <p className="text-gray-700 font-medium text-[13px] leading-tight line-clamp-2">{renderText(loc?.body)}</p>
+                          </div>
+                          
+                          <div className="relative group">
+                            <input 
+                               type="text"
+                               value={answer}
+                               onChange={(e) => setAnswer(e.target.value)}
+                               onKeyDown={(e) => e.key === 'Enter' && checkAnswer()}
+                               placeholder="Typ je antwoord..."
+                               className={`w-full h-12 bg-white/95 border-2 ${alertState === 'wrong' ? 'border-red-500 text-red-600 animate-shake' : 'border-[#003566]/10 text-gray-900 focus:border-[#003566]'} rounded-xl text-center text-[17px] font-bold uppercase tracking-widest outline-none transition-all shadow-inner`}
+                               style={{ fontFamily: 'monospace' }}
+                            />
+                            {alertState === 'wrong' && <p className="absolute -bottom-5 left-0 right-0 text-[10px] text-red-500 font-bold text-center uppercase">Onjuist antwoord</p>}
+                          </div>
+                       </div>
+
+                       {/* Persistent Bottom Button */}
+                       <div className="absolute bottom-10 w-[calc(100%-60px)] max-w-sm">
                           <button 
                              onClick={(e) => {
                                e.stopPropagation();
-                               if (!hasOpenedMaps) {
+                               if (navPhase === 'maps') {
                                  handleOpenMaps();
                                } else {
-                                 setStep('verify');
+                                 checkAnswer();
                                }
                              }}
-                             className={`${!hasOpenedMaps ? 'bg-white border-[#003566] text-[#003566]' : 'bg-[#003566] border-white text-white'} border-4 text-[17px] font-black uppercase tracking-widest px-8 py-5 rounded-[20px] shadow-2xl flex items-center justify-center gap-3 active:scale-95 transition-all`}
+                             className={`w-full h-16 rounded-2xl border-4 text-[16px] font-black uppercase tracking-[0.2em] shadow-[0_10px_25px_rgba(0,0,0,0.2)] active:scale-95 transition-all duration-500 flex items-center justify-center gap-3 ${navPhase === 'maps' ? 'bg-white border-[#003566] text-[#003566]' : 'bg-[#003566] border-white text-white rotate-0'}`}
                           >
-                             {!hasOpenedMaps ? (
-                               <>
-                                 <span className="text-3xl">📍</span> OPEN MAPS
-                               </>
+                             {navPhase === 'maps' ? (
+                               <>📍 OPEN MAPS</>
                              ) : (
                                "WE ZIJN ER"
                              )}
@@ -397,35 +422,8 @@ export default function PlayerPage({ params }: { params: Promise<{ locationSlug:
                     </div>
                   )}
 
-                  {/* PHASE B: PHYSICAL VERIFICATION */}
-                  {step === 'verify' && (
-                    <div className="w-full flex flex-col items-center animate-in slide-in-from-bottom-5 duration-500 mt-[5%]">
-                       <div className="bg-white/95 backdrop-blur-md rounded-[20px] p-6 shadow-xl border-4 border-white/60 w-[calc(100%-4px)] max-w-sm mb-4">
-                         <h2 className="text-2xl text-[#D62828] font-black uppercase tracking-wider mb-2 leading-tight">{renderText(loc?.heading) || 'Verificatie'}</h2>
-                         <h3 className="text-[17px] text-[#003566] font-bold mb-4">{renderText(loc?.subheading)}</h3>
-                         <p className="text-gray-800 font-medium text-[15px] leading-relaxed whitespace-pre-line">{renderText(loc?.body)}</p>
-                       </div>
-                       
-                       <div className="w-[calc(100%-4px)] max-w-sm flex flex-col items-center gap-4 z-20">
-                          <input 
-                            type="text"
-                            value={answer}
-                            onChange={(e) => setAnswer(e.target.value)}
-                            onKeyDown={(e) => e.key === 'Enter' && checkAnswer()}
-                            placeholder="Typ je antwoord..."
-                            className={`w-full h-14 bg-white border-4 ${alertState === 'wrong' ? 'border-red-500 text-red-600 shadow-[0_0_15px_rgba(239,68,68,0.5)]' : 'border-gray-300 text-gray-900 focus:border-[#003566]'} rounded-xl text-center text-[19px] font-bold uppercase tracking-widest outline-none transition-all placeholder:text-gray-300 placeholder:font-medium`}
-                            style={{ fontFamily: 'monospace' }}
-                          />
-
-                          <button 
-                             onClick={checkAnswer}
-                             className="w-full bg-[#003566] border-4 border-white text-white text-[17px] font-black uppercase tracking-widest py-5 rounded-[20px] shadow-2xl active:scale-95 transition-transform"
-                          >
-                             CONTROLEER
-                          </button>
-                       </div>
-                    </div>
-                  )}
+                  {/* Redundant verify step removed, logic moved inside direction for smooth transitions */}
+                  {step === 'verify' && null}
 
                   {step === 'intro' && (
                     <div className={`space-y-4 w-full transition-all duration-700 ${isStarting ? 'opacity-0 scale-95' : 'opacity-100 scale-100'}`}>
