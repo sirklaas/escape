@@ -134,6 +134,7 @@ export default function PlayerPage({ params }: { params: Promise<{ locationSlug:
   const [hintsRevealed, setHintsRevealed] = useState(0);
   const [showHintButton, setShowHintButton] = useState(false);
   const [answer, setAnswer] = useState('');
+  const [hasOpenedMaps, setHasOpenedMaps] = useState(false);
   const [alertState, setAlertState] = useState<'none' | 'wrong' | 'correct' | 'hint' | 'timeup'>('none');
   const [currentHintText, setCurrentHintText] = useState('');
   const timerRef = useRef<NodeJS.Timeout | null>(null);
@@ -226,6 +227,16 @@ export default function PlayerPage({ params }: { params: Promise<{ locationSlug:
     }
   };
 
+  const handleOpenMaps = () => {
+    if (!loc?.mapUrl) return;
+    const walkUrl = loc.mapUrl.includes('?') 
+      ? `${loc.mapUrl}&travelmode=walking&dir_action=navigate` 
+      : `${loc.mapUrl}?travelmode=walking&dir_action=navigate`;
+    
+    setHasOpenedMaps(true);
+    window.open(walkUrl, '_blank');
+  };
+
   const handleRevealHint = () => {
     if (!currentPageData || hintsRevealed >= 4) return;
     const cost = HINT_COSTS[hintsRevealed];
@@ -278,12 +289,8 @@ export default function PlayerPage({ params }: { params: Promise<{ locationSlug:
             <div 
               className="relative flex-1 rounded-[20px] overflow-hidden flex flex-col h-full bg-[#f8f8f8]" 
               onClick={() => {
-                 if (step === 'direction' && loc?.mapUrl) {
-                    // Force walking mode for navigation when background is clicked
-                    const walkUrl = loc.mapUrl.includes('?') 
-                       ? `${loc.mapUrl}&travelmode=walking&dir_action=navigate` 
-                       : `${loc.mapUrl}?travelmode=walking&dir_action=navigate`;
-                    window.open(walkUrl, '_blank');
+                 if (step === 'direction') {
+                    handleOpenMaps();
                  }
               }}
               style={{ 
@@ -367,21 +374,24 @@ export default function PlayerPage({ params }: { params: Promise<{ locationSlug:
                        </div>
 
                        <div className="flex flex-col gap-4 w-[calc(100%-4px)] max-w-sm">
-                          {loc?.mapUrl && (
-                             <a href={loc.mapUrl} target="_blank" rel="noopener noreferrer" 
-                                className="bg-white border-4 border-[#003566] text-[#003566] text-[17px] font-black uppercase tracking-widest px-8 py-4 rounded-[20px] shadow-2xl flex items-center justify-center gap-3 active:scale-95 transition-transform">
-                                <span className="text-3xl">📍</span> OPEN MAPS
-                             </a>
-                          )}
-
                           <button 
                              onClick={(e) => {
-                               e.stopPropagation(); // Prevent background click
-                               setStep('verify');
+                               e.stopPropagation();
+                               if (!hasOpenedMaps) {
+                                 handleOpenMaps();
+                               } else {
+                                 setStep('verify');
+                               }
                              }}
-                             className="bg-[#003566] border-4 border-white text-white text-[17px] font-black uppercase tracking-widest px-8 py-5 rounded-[20px] shadow-2xl flex items-center justify-center gap-3 active:scale-95 transition-transform"
+                             className={`${!hasOpenedMaps ? 'bg-white border-[#003566] text-[#003566]' : 'bg-[#003566] border-white text-white'} border-4 text-[17px] font-black uppercase tracking-widest px-8 py-5 rounded-[20px] shadow-2xl flex items-center justify-center gap-3 active:scale-95 transition-all`}
                           >
-                             WE ZIJN ER
+                             {!hasOpenedMaps ? (
+                               <>
+                                 <span className="text-3xl">📍</span> OPEN MAPS
+                               </>
+                             ) : (
+                               "WE ZIJN ER"
+                             )}
                           </button>
                        </div>
                     </div>
