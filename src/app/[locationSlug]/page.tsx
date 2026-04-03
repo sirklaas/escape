@@ -274,24 +274,53 @@ export default function PlayerPage({ params }: { params: Promise<{ locationSlug:
                 <div className="h-[30%] flex flex-col items-center justify-start pt-2 text-center px-5 w-full">
                   {step === 'direction' && (
                     <div className="absolute inset-0 z-[100] flex flex-col items-center overflow-hidden">
-                       <div className="absolute w-full px-6 flex flex-col items-center transition-all duration-1000 cubic-bezier(0.16, 1, 0.3, 1)" style={{ top: navPhase === 'verify' ? '35%' : 'calc(70% - 20px)', transform: 'translateY(-50%)' }}>
-                          <div className={`bg-white/95 backdrop-blur-xl rounded-[24px] p-6 shadow-2xl border-4 border-white/50 w-full max-w-sm animate-in fade-in zoom-in duration-1000 ${navPhase === 'verify' ? 'scale-90 opacity-40 blur-[1px]' : 'scale-100 opacity-100 blur-0'}`}>
-                             <p className="text-[10px] text-gray-400 uppercase font-black tracking-[0.4em] mb-2 text-center">HUIDIGE BESTEMMING</p>
-                             <div className="bg-[#003566]/10 py-3 rounded-xl border border-[#003566]/10">
-                                <p className="text-[#003566] text-2xl font-black tracking-tighter text-center" style={{ fontFamily: 'monospace' }}>{ (loc?.mapUrl && loc.mapUrl.includes('/') ? loc.mapUrl.split('/').pop()?.split('?')[0]?.replace(/%20/g, ' ') : '5F9Q+M5 LEIDEN') }</p>
+                       {/* Location Indicator - Phase 1: Header | Phase 2: High Header */}
+                       <div className="absolute w-full px-6 flex flex-col items-center transition-all duration-1000 cubic-bezier(0.16, 1, 0.3, 1)" style={{ top: navPhase === 'verify' ? '35%' : '22%', transform: 'translateY(-50%)' }}>
+                          <div className={`bg-white/95 backdrop-blur-xl rounded-[24px] p-4 shadow-2xl border-4 border-white/50 w-full max-w-sm animate-in fade-in zoom-in duration-1000 ${navPhase === 'verify' ? 'scale-90 opacity-40 blur-[1px]' : 'scale-100 opacity-100 blur-0'}`}>
+                             <p className="text-[10px] text-gray-400 uppercase font-black tracking-[0.4em] mb-1 text-center">BESTEMMING</p>
+                             <div className="bg-[#003566]/10 py-2 rounded-xl border border-[#003566]/10">
+                                <p className="text-[#003566] text-xl font-black tracking-tighter text-center" style={{ fontFamily: 'monospace' }}>{ (loc?.mapUrl && loc.mapUrl.includes('/') ? loc.mapUrl.split('/').pop()?.split('?')[0]?.replace(/%20/g, ' ') : '5F9Q+M5 LEIDEN') }</p>
                              </div>
                           </div>
                        </div>
+
+                       {/* Map Container - 30% to 80% */}
+                       <div className={`absolute left-0 right-0 px-6 transition-all duration-1000 cubic-bezier(0.16, 1, 0.3, 1) ${navPhase === 'maps' ? 'opacity-100 scale-100' : 'opacity-0 scale-95 pointer-events-none'}`} 
+                            style={{ top: '30%', height: '50%' }}>
+                          <div className="w-full h-full bg-white rounded-[32px] overflow-hidden border-4 border-white shadow-2xl relative">
+                             <iframe 
+                                width="100%" 
+                                height="100%" 
+                                frameBorder="0" 
+                                style={{ border: 0 }}
+                                src={`https://www.google.com/maps?q=${encodeURIComponent(loc?.mapUrl || '5F9Q+M5 Leiden')}&output=embed`}
+                                allowFullScreen
+                             />
+                             {/* Overlay to catch clicks and redirect to full app if desired, but we have the button below */}
+                             <div className="absolute bottom-4 right-4 flex flex-col gap-2">
+                                <button onClick={handleOpenMaps} className="w-12 h-12 bg-white rounded-full shadow-lg border-2 border-[#003566]/10 flex items-center justify-center text-xl">🧭</button>
+                             </div>
+                          </div>
+                       </div>
+
+                       {/* Verification Block - Phase 2 */}
                        <div className={`absolute w-full px-6 flex flex-col gap-4 transition-all duration-1000 cubic-bezier(0.16, 1, 0.3, 1) ${navPhase === 'verify' ? 'opacity-100 scale-100 translate-y-0' : 'opacity-0 scale-90 translate-y-20 pointer-events-none'}`} style={{ top: '48%' }}>
                           <div className="bg-white/95 backdrop-blur-md rounded-[20px] p-6 shadow-xl border-4 border-white/60 w-full max-w-sm animate-fluent-slide-up">
-                             <h2 className="text-2xl text-[#D62828] font-black uppercase tracking-wider mb-2 leading-tight">{renderText(loc?.heading) || 'Phase 2'}</h2>
+                             <h2 className="text-2xl text-[#D62828] font-black uppercase tracking-wider mb-2 leading-tight">{renderText(loc?.heading) || 'LAATSTE CHECK'}</h2>
                              <p className="text-gray-800 font-medium text-[15px] leading-relaxed mb-4">{renderText(loc?.body)}</p>
                              <input type="text" value={answer} onChange={(e) => setAnswer(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && checkAnswer()} placeholder="Typ je antwoord..." className={`w-full h-14 bg-gray-50 border-4 ${alertState === 'wrong' ? 'border-red-500 text-red-600 animate-shake' : 'border-[#003566]/20 text-gray-900 focus:border-[#003566]'} rounded-xl text-center text-[19px] font-black uppercase tracking-widest outline-none transition-all shadow-inner`} style={{ fontFamily: 'monospace' }} />
                           </div>
                        </div>
-                       <div className="absolute bottom-10 w-full px-6 max-w-sm flex justify-center">
-                          <button onClick={(e) => { e.stopPropagation(); if (navPhase === 'maps') handleOpenMaps(); else checkAnswer(); }} className={`w-full h-20 rounded-[24px] border-4 text-[18px] font-black uppercase tracking-[0.2em] shadow-[0_20px_40px_rgba(0,0,0,0.4)] active:scale-95 transition-all duration-700 flex items-center justify-center gap-4 ${navPhase === 'maps' ? 'bg-white border-[#003566] text-[#003566] animate-pulse-slow' : 'bg-[#003566] border-white text-white'}`}>
-                             {navPhase === 'maps' ? <><span className="text-3xl">📍</span> OPEN MAPS</> : "CONTROLEER"}
+
+                       {/* Footer Action Button */}
+                       <div className="absolute bottom-10 w-full px-6 max-w-sm flex flex-col items-center gap-2">
+                          {navPhase === 'maps' && (
+                             <button onClick={handleOpenMaps} className="text-[#003566] text-xs font-black uppercase tracking-widest opacity-60 hover:opacity-100 transition-opacity mb-2">
+                                ↗ OPEN GOOGLE MAPS APP
+                             </button>
+                          )}
+                          <button onClick={(e) => { e.stopPropagation(); if (navPhase === 'maps') setNavPhase('verify'); else checkAnswer(); }} className={`w-full h-20 rounded-[24px] border-4 text-[18px] font-black uppercase tracking-[0.2em] shadow-[0_20px_40px_rgba(0,0,0,0.4)] active:scale-95 transition-all duration-700 flex items-center justify-center gap-4 ${navPhase === 'maps' ? 'bg-[#003566] border-white text-white animate-pulse-slow' : 'bg-[#D62828] border-white text-white'}`}>
+                             {navPhase === 'maps' ? "IK BEN ER" : "CONTROLEER"}
                           </button>
                        </div>
                     </div>
