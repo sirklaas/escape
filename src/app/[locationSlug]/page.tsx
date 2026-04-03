@@ -208,6 +208,24 @@ export default function PlayerPage({ params }: { params: Promise<{ locationSlug:
     setAnswer('');
   };
 
+  const checkAnswer = () => {
+    if (!loc) return;
+    // Normalized comparison for case-insensitivity and whitespace
+    const normalizedUserInput = answer.toLowerCase().trim();
+    const normalizedCorrectAnswer = (loc.verificationAnswer || "").toLowerCase().trim();
+    
+    if (normalizedUserInput === normalizedCorrectAnswer || !loc.verificationAnswer) {
+      setAlertState('correct');
+      setTimeout(() => {
+        setStep('intro');
+        setAlertState('none');
+        setAnswer('');
+      }, 1500);
+    } else {
+      setAlertState('wrong');
+    }
+  };
+
   const handleRevealHint = () => {
     if (!currentPageData || hintsRevealed >= 4) return;
     const cost = HINT_COSTS[hintsRevealed];
@@ -257,7 +275,25 @@ export default function PlayerPage({ params }: { params: Promise<{ locationSlug:
           <div className="relative flex-1 overflow-hidden flex flex-col h-full" style={{ background: 'white', padding: '20px' }}>
             
             {/* 10-Part Grid Container Background */}
-            <div className="relative flex-1 rounded-[20px] overflow-hidden flex flex-col h-full bg-[#f8f8f8]" style={{ backgroundImage: step === 'video' ? 'none' : ( (step === 'direction' || step === 'verify') ? 'url("/Loc.jpg")' : 'url("/Escapebackdrop.jpg")'), backgroundSize: 'cover', backgroundPosition: 'top center', backgroundRepeat: 'no-repeat' }}>
+            <div 
+              className="relative flex-1 rounded-[20px] overflow-hidden flex flex-col h-full bg-[#f8f8f8]" 
+              onClick={() => {
+                 if (step === 'direction' && loc?.mapUrl) {
+                    // Force walking mode for navigation when background is clicked
+                    const walkUrl = loc.mapUrl.includes('?') 
+                       ? `${loc.mapUrl}&travelmode=walking&dir_action=navigate` 
+                       : `${loc.mapUrl}?travelmode=walking&dir_action=navigate`;
+                    window.open(walkUrl, '_blank');
+                 }
+              }}
+              style={{ 
+                backgroundImage: step === 'video' ? 'none' : ( (step === 'direction' || step === 'verify') ? 'url("/Loc.jpg")' : 'url("/Escapebackdrop.jpg")'), 
+                backgroundSize: 'cover', 
+                backgroundPosition: 'top center', 
+                backgroundRepeat: 'no-repeat',
+                cursor: step === 'direction' ? 'pointer' : 'default'
+              }}
+            >
               
               {/* Full-Screen Video Step Overlay */}
               {step === 'video' && (
@@ -310,7 +346,7 @@ export default function PlayerPage({ params }: { params: Promise<{ locationSlug:
                   
                   {/* PHASE A: MAP NAVIGATION */}
                   {step === 'direction' && (
-                    <div className="w-full flex flex-col items-center mt-[15%] animate-in fade-in duration-800">
+                    <div className="w-full flex flex-col items-center mt-[5%] animate-in fade-in duration-800">
                        
                        {/* Location Heading & Instructions */}
                        <div className="bg-white/95 backdrop-blur-md rounded-[20px] p-6 shadow-xl border-4 border-white/50 w-[calc(100%-4px)] max-w-sm mb-6">
@@ -319,36 +355,64 @@ export default function PlayerPage({ params }: { params: Promise<{ locationSlug:
                          ) : (
                            <h2 className="text-2xl text-[#D62828] font-black uppercase tracking-wider mb-2 leading-tight">Navigeer naar locatie</h2>
                          )}
-                         <p className="text-gray-800 font-medium text-[15px]">Open de map hieronder en loop er direct heen.</p>
+                         <p className="text-gray-800 font-medium text-[15px] mb-4">Open de map hieronder en loop er direct heen.</p>
+                         
+                         {/* Location Code Display (Plus Code style) */}
+                         <div className="bg-gray-100 rounded-lg p-3 border border-gray-200">
+                           <p className="text-[10px] text-gray-400 uppercase font-bold tracking-widest mb-1">Lokatie Code</p>
+                           <p className="text-[#003566] text-lg font-black tracking-tight" style={{ fontFamily: 'monospace' }}>
+                             [{ (loc?.mapUrl && loc.mapUrl.includes('/') ? loc.mapUrl.split('/').pop()?.split('?')[0]?.replace(/%20/g, ' ') : '5F9Q+M5 Leiden') }]
+                           </p>
+                         </div>
                        </div>
 
-                       {loc?.mapUrl && (
-                          <a href={loc.mapUrl} target="_blank" rel="noopener noreferrer" 
-                             className="bg-white border-4 border-[#003566] text-[#003566] text-[17px] font-black uppercase tracking-widest px-8 py-5 rounded-[20px] shadow-2xl flex items-center justify-center gap-3 active:scale-95 transition-transform w-[calc(100%-4px)] max-w-sm">
-                             <span className="text-3xl">📍</span> OPEN MAPS
-                          </a>
-                       )}
+                       <div className="flex flex-col gap-4 w-[calc(100%-4px)] max-w-sm">
+                          {loc?.mapUrl && (
+                             <a href={loc.mapUrl} target="_blank" rel="noopener noreferrer" 
+                                className="bg-white border-4 border-[#003566] text-[#003566] text-[17px] font-black uppercase tracking-widest px-8 py-4 rounded-[20px] shadow-2xl flex items-center justify-center gap-3 active:scale-95 transition-transform">
+                                <span className="text-3xl">📍</span> OPEN MAPS
+                             </a>
+                          )}
+
+                          <button 
+                             onClick={(e) => {
+                               e.stopPropagation(); // Prevent background click
+                               setStep('verify');
+                             }}
+                             className="bg-[#003566] border-4 border-white text-white text-[17px] font-black uppercase tracking-widest px-8 py-5 rounded-[20px] shadow-2xl flex items-center justify-center gap-3 active:scale-95 transition-transform"
+                          >
+                             WE ZIJN ER
+                          </button>
+                       </div>
                     </div>
                   )}
 
                   {/* PHASE B: PHYSICAL VERIFICATION */}
                   {step === 'verify' && (
-                    <div className="w-full flex flex-col items-center animate-in slide-in-from-bottom-5 duration-500 mt-[15%]">
+                    <div className="w-full flex flex-col items-center animate-in slide-in-from-bottom-5 duration-500 mt-[5%]">
                        <div className="bg-white/95 backdrop-blur-md rounded-[20px] p-6 shadow-xl border-4 border-white/60 w-[calc(100%-4px)] max-w-sm mb-4">
-                         <h2 className="text-2xl text-[#D62828] font-black uppercase tracking-wider mb-2 leading-tight">{renderText(loc?.heading)}</h2>
+                         <h2 className="text-2xl text-[#D62828] font-black uppercase tracking-wider mb-2 leading-tight">{renderText(loc?.heading) || 'Verificatie'}</h2>
                          <h3 className="text-[17px] text-[#003566] font-bold mb-4">{renderText(loc?.subheading)}</h3>
                          <p className="text-gray-800 font-medium text-[15px] leading-relaxed whitespace-pre-line">{renderText(loc?.body)}</p>
                        </div>
                        
-                       <div className="w-[calc(100%-4px)] max-w-sm flex flex-col items-center z-20">
+                       <div className="w-[calc(100%-4px)] max-w-sm flex flex-col items-center gap-4 z-20">
                           <input 
                             type="text"
                             value={answer}
                             onChange={(e) => setAnswer(e.target.value)}
+                            onKeyDown={(e) => e.key === 'Enter' && checkAnswer()}
                             placeholder="Typ je antwoord..."
                             className={`w-full h-14 bg-white border-4 ${alertState === 'wrong' ? 'border-red-500 text-red-600 shadow-[0_0_15px_rgba(239,68,68,0.5)]' : 'border-gray-300 text-gray-900 focus:border-[#003566]'} rounded-xl text-center text-[19px] font-bold uppercase tracking-widest outline-none transition-all placeholder:text-gray-300 placeholder:font-medium`}
                             style={{ fontFamily: 'monospace' }}
                           />
+
+                          <button 
+                             onClick={checkAnswer}
+                             className="w-full bg-[#003566] border-4 border-white text-white text-[17px] font-black uppercase tracking-widest py-5 rounded-[20px] shadow-2xl active:scale-95 transition-transform"
+                          >
+                             CONTROLEER
+                          </button>
                        </div>
                     </div>
                   )}
