@@ -277,7 +277,7 @@ export default function PlayerPage({ params }: { params: Promise<{ locationSlug:
                         {/* Location Indicator - Phase 1: Header | Phase 2: High Header */}
                         <div className="absolute w-full px-6 flex flex-col items-center transition-all duration-1000 cubic-bezier(0.16, 1, 0.3, 1)" style={{ top: navPhase === 'verify' ? '40.25%' : '27.25%', transform: 'translateY(-50%)' }}>
                            <div className={`w-full max-w-sm animate-in fade-in zoom-in duration-1000 ${navPhase === 'verify' ? 'scale-90 opacity-40 blur-[1px]' : 'scale-100 opacity-100 blur-0'}`}>
-                              <p className="text-[#003566] text-xl font-black tracking-tighter text-center" style={{ fontFamily: 'Barlow Semi Condensed' }}>{ (loc?.mapUrl && loc.mapUrl.includes('/') ? loc.mapUrl.split('/').pop()?.split('?')[0]?.replace(/%20/g, ' ') : '5F9Q+M5 LEIDEN') }</p>
+                              <p className="text-gray-400 text-xl font-medium tracking-tighter text-center" style={{ fontFamily: 'Barlow Semi Condensed' }}>{ (loc?.mapUrl && loc.mapUrl.includes('/') ? loc.mapUrl.split('/').pop()?.split('?')[0]?.replace(/%20/g, ' ') : '5F9Q+M5 LEIDEN') }</p>
                            </div>
                         </div>
 
