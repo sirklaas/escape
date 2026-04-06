@@ -344,11 +344,11 @@ export default function PlayerPage({ params }: { params: Promise<{ locationSlug:
                 </div>
 
                 {(alertState === 'correct' || alertState === 'hint' || alertState === 'wrong') && (
-                  <div className="absolute left-0 right-0 top-[65%] -translate-y-1/2 z-[120] h-[180px] flex items-center justify-center pointer-events-none">
+                  <div className="absolute left-0 right-0 top-[65%] -translate-y-1/2 z-[120] h-[200px] flex items-center justify-center pointer-events-none">
                     <div className={`w-[280px] mx-auto h-full pointer-events-auto ${isClosingAlert ? 'animate-fluent-slide-down' : 'animate-fluent-slide-up'}`}>
                       {alertState === 'wrong' && (
                          <div className="bg-gradient-to-b from-[#D62828] to-[#800000] text-white rounded-[40px] border-4 border-white shadow-[0_20px_50px_rgba(0,0,0,0.5)] w-full h-full flex flex-col items-center relative overflow-hidden">
-                            <div className="flex flex-col items-center text-center w-full pt-5">
+                            <div className="flex flex-col items-center text-center w-full pt-10">
                                <h2 className="text-2xl font-black mb-1 uppercase" style={{ fontFamily: 'Barlow Semi Condensed' }}>Jammer</h2>
                                <p className="text-[14px] font-medium leading-tight px-6 opacity-90">
                                   Helaas dat is niet helemaal juist<br />probeer het opnieuw
@@ -359,7 +359,7 @@ export default function PlayerPage({ params }: { params: Promise<{ locationSlug:
                       )}
                       {(alertState === 'correct' || alertState === 'hint') && (
                         <div className="bg-gradient-to-tr from-amber-400 to-yellow-200 rounded-[40px] border-4 border-white shadow-[0_20px_50px_rgba(0,0,0,0.3)] w-full h-full flex flex-col items-center relative overflow-hidden">
-                           <div className="flex flex-col items-center text-center w-full pt-8">
+                           <div className="flex flex-col items-center text-center w-full pt-12">
                               <p className="text-[#003566] text-center font-bold px-6 leading-tight">{alertState === 'correct' ? "Geweldig gedaan!" : `Hint: ${currentHintText}`}</p>
                            </div>
                            <button onClick={() => closeAlert(alertState === 'correct' ? proceedNext : undefined)} className="absolute bottom-5 left-1/2 -translate-x-1/2 w-14 h-14 bg-[#003566] text-white rounded-full border-4 border-white shadow-xl active:scale-95 flex items-center justify-center font-black">OK</button>
