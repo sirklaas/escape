@@ -282,7 +282,7 @@ export default function PlayerPage({ params }: { params: Promise<{ locationSlug:
                         </div>
 
                         {/* Map Container - Phase 1: Full | Phase 2: Hidden/Slide-down */}
-                        <div className={`absolute left-0 right-0 transition-all duration-1000 cubic-bezier(0.16, 1, 0.3, 1) ${navPhase === 'maps' ? 'opacity-100 scale-100 translate-y-0' : 'opacity-0 scale-95 translate-y-[100%] pointer-events-none'}`} 
+                        <div className={`absolute left-5 right-5 transition-all duration-1000 cubic-bezier(0.16, 1, 0.3, 1) ${navPhase === 'maps' ? 'opacity-100 scale-100 translate-y-0' : 'opacity-0 scale-95 translate-y-[100%] pointer-events-none'}`} 
                              style={{ top: '30%', height: '50%' }}>
                            <div className="w-full h-full bg-white rounded-[32px] overflow-hidden border-4 border-white shadow-2xl relative">
                               <iframe 
