@@ -103,10 +103,10 @@ textarea { resize: vertical; min-height: 56px; }
   from { opacity: 0; transform: translateY(30px) scale(0.95); }
   to { opacity: 1; transform: translateY(0) scale(1); }
 }
-.animate-fluent-slide-up { animation: fluent-slide-up 0.8s cubic-bezier(0.16, 1, 0.3, 1); }
+.animate-fluent-slide-up { animation: fluent-slide-up 2s cubic-bezier(0.16, 1, 0.3, 1); }
 
 @keyframes fluent-slide-down {
   from { opacity: 1; transform: translateY(0) scale(1); }
   to { opacity: 0; transform: translateY(30px) scale(0.95); }
 }
-.animate-fluent-slide-down { animation: fluent-slide-down 0.8s cubic-bezier(0.16, 1, 0.3, 1); }
+.animate-fluent-slide-down { animation: fluent-slide-down 2s cubic-bezier(0.16, 1, 0.3, 1); }

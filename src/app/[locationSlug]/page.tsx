@@ -275,14 +275,14 @@ export default function PlayerPage({ params }: { params: Promise<{ locationSlug:
                    {step === 'direction' && (
                      <div className="absolute inset-0 z-[100] flex flex-col items-center overflow-hidden">
                         {/* Location Indicator - Phase 1: Header | Phase 2: High Header */}
-                        <div className="absolute w-full px-6 flex flex-col items-center transition-all duration-1000 cubic-bezier(0.16, 1, 0.3, 1)" style={{ top: navPhase === 'verify' ? '40.25%' : '27.25%', transform: 'translateY(-50%)' }}>
-                           <div className={`w-full max-w-sm animate-in fade-in zoom-in duration-1000 ${navPhase === 'verify' ? 'scale-90 opacity-40 blur-[1px]' : 'scale-100 opacity-100 blur-0'}`}>
+                        <div className="absolute w-full px-6 flex flex-col items-center transition-all duration-[2000ms] cubic-bezier(0.16, 1, 0.3, 1)" style={{ top: navPhase === 'verify' ? '40.25%' : '27.25%', transform: 'translateY(-50%)' }}>
+                           <div className={`w-full max-w-sm animate-in fade-in zoom-in duration-[2000ms] ${navPhase === 'verify' ? 'scale-90 opacity-40 blur-[1px]' : 'scale-100 opacity-100 blur-0'}`}>
                               <p className="text-gray-300 text-xl font-medium tracking-tighter text-center" style={{ fontFamily: 'Barlow Semi Condensed' }}>{ (loc?.mapUrl && loc.mapUrl.includes('/') ? loc.mapUrl.split('/').pop()?.split('?')[0]?.replace(/%20/g, ' ') : '5F9Q+M5 LEIDEN') }</p>
                            </div>
                         </div>
 
                         {/* Map Container - Phase 1: Full | Phase 2: Hidden/Slide-down */}
-                        <div className={`absolute left-5 right-5 transition-all duration-1000 cubic-bezier(0.16, 1, 0.3, 1) ${navPhase === 'maps' ? 'opacity-100 scale-100 translate-y-0' : 'opacity-0 scale-95 translate-y-[100%] pointer-events-none'}`} 
+                        <div className={`absolute left-5 right-5 transition-all duration-[2000ms] cubic-bezier(0.16, 1, 0.3, 1) ${navPhase === 'maps' ? 'opacity-100 scale-100 translate-y-0' : 'opacity-0 scale-95 translate-y-[100%] pointer-events-none'}`} 
                              style={{ top: '30%', height: '50%' }}>
                            <div className="w-full h-full bg-white rounded-[32px] overflow-hidden border-4 border-white shadow-2xl relative p-5">
                               <iframe 
@@ -299,22 +299,21 @@ export default function PlayerPage({ params }: { params: Promise<{ locationSlug:
                            </div>
                         </div>
 
-                        {/* Verification Block - Phase 2 */}
-                        <div className={`absolute w-full px-6 flex flex-col gap-4 transition-all duration-1000 cubic-bezier(0.16, 1, 0.3, 1) ${navPhase === 'verify' ? 'opacity-100 scale-100 translate-y-0' : 'opacity-0 scale-90 translate-y-20 pointer-events-none'}`} style={{ top: '32%' }}>
-                           <div className="bg-white/95 backdrop-blur-md rounded-[32px] p-8 shadow-2xl border border-gray-100 w-full max-w-sm animate-fluent-slide-up">
-                              <h2 className="text-2xl text-[#6c5ce7] font-black uppercase tracking-wider mb-2 leading-tight" style={{ fontFamily: 'Barlow Semi Condensed' }}>{(loc?.heading && loc.heading.trim() !== '') ? renderText(loc.heading) : 'LAATSTE CHECK'}</h2>
-                              <p className="text-gray-600 font-medium text-[15px] leading-relaxed mb-6" style={{ fontFamily: 'Inter' }}>{(loc?.body && loc.body.trim() !== '') ? renderText(loc.body) : 'Je bent op de juiste plek. Voer hieronder de code of het antwoord in om door naar de volgende fase te gaan.'}</p>
-                              <div className="relative group">
-                                 <input type="text" value={answer} onChange={(e) => setAnswer(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && checkAnswer()} placeholder="Antwoord..." className={`w-full h-16 bg-gray-50 border-4 ${alertState === 'wrong' ? 'border-[#d63031] text-[#d63031] animate-shake' : 'border-[#6c5ce7]/20 text-gray-900 focus:border-[#6c5ce7] focus:bg-white'} rounded-2xl text-center text-2xl font-black uppercase tracking-widest outline-none transition-all shadow-inner`} style={{ fontFamily: 'monospace' }} />
-                                 <div className="absolute -bottom-1 left-0 right-0 h-1 bg-[#6c5ce7]/10 rounded-full scale-x-0 group-focus-within:scale-x-100 transition-transform duration-500" />
-                              </div>
-                           </div>
-                        </div>
+                         {/* Verification Block - Phase 2 (Pill style input, no card background) */}
+                         <div className={`absolute left-5 right-5 flex flex-col gap-4 transition-all duration-[2000ms] cubic-bezier(0.16, 1, 0.3, 1) ${navPhase === 'verify' ? 'opacity-100 scale-100 translate-y-0' : 'opacity-0 scale-90 translate-y-20 pointer-events-none'}`} style={{ top: '70%' }}>
+                            <div className="w-full max-w-sm animate-fluent-slide-up flex flex-col gap-4">
+                               <h2 className="text-2xl text-[#003566] font-black uppercase tracking-wider mb-2 leading-tight text-center" style={{ fontFamily: 'Barlow Semi Condensed' }}>{(loc?.heading && loc.heading.trim() !== '') ? renderText(loc.heading) : 'LAATSTE CHECK'}</h2>
+                               <p className="text-gray-600 font-medium text-[15px] leading-relaxed mb-4 text-center" style={{ fontFamily: 'Inter' }}>{(loc?.body && loc.body.trim() !== '') ? renderText(loc.body) : 'Je bent op de juiste plek. Voer hieronder de code of het antwoord in om door naar de volgende fase te gaan.'}</p>
+                               <div className="relative group">
+                                  <input type="text" value={answer} onChange={(e) => setAnswer(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && checkAnswer()} placeholder="Antwoord..." className={`w-full h-10 bg-white border-4 ${alertState === 'wrong' ? 'border-[#d63031] text-[#d63031] animate-shake' : 'border-[#003566]/10 text-gray-900 focus:border-[#003566]/30 focus:bg-white'} rounded-full text-center text-2xl font-black uppercase tracking-widest outline-none transition-all shadow-inner`} style={{ fontFamily: 'monospace' }} />
+                               </div>
+                            </div>
+                         </div>
 
                         {/* Footer Action Button */}
                         <div className="absolute bottom-10 left-5 right-5 flex flex-col items-center gap-2">
-                           <button onClick={(e) => { e.stopPropagation(); if (navPhase === 'maps') setNavPhase('verify'); else checkAnswer(); }} className={`w-full h-10 rounded-[24px] border-4 text-[18px] tracking-[0.2em] shadow-[0_20px_40px_rgba(108,92,231,0.3)] active:scale-95 transition-all duration-1000 flex items-center justify-center gap-4 ${navPhase === 'maps' ? 'bg-gradient-to-b from-[#004e92] to-[#000428] border-white text-white animate-pulse-slow' : 'bg-[#6c5ce7] border-white text-white'}`} style={{ fontFamily: 'Barlow Semi Condensed', fontWeight: 300 }}>
-                              {navPhase === 'maps' ? "Ik ben er" : "CONTROLEER"}
+                           <button onClick={(e) => { e.stopPropagation(); if (navPhase === 'maps') setNavPhase('verify'); else checkAnswer(); }} className="w-full h-10 rounded-[24px] border-4 text-[18px] tracking-[0.2em] shadow-[0_20px_40px_rgba(108,92,231,0.3)] active:scale-95 transition-all duration-[2000ms] flex items-center justify-center gap-4 bg-gradient-to-b from-[#004e92] to-[#000428] border-white text-white animate-pulse-slow" style={{ fontFamily: 'Barlow Semi Condensed', fontWeight: 300 }}>
+                              {navPhase === 'maps' ? "Ik ben er" : "Controleer"}
                            </button>
                         </div>
                      </div>
@@ -327,7 +326,7 @@ export default function PlayerPage({ params }: { params: Promise<{ locationSlug:
                     </div>
                   )}
                   {step === 'puzzle' && (
-                    <div className="space-y-4 w-full animate-in fade-in duration-1000">
+                    <div className="space-y-4 w-full animate-in fade-in duration-[2000ms]">
                       <h2 className="text-2xl text-gray-900 leading-tight" style={{ fontWeight: 400 }}>{renderText(currentPageData?.kop)}</h2>
                       <p className="text-lg font-light text-gray-800 leading-normal" style={{ fontWeight: 300 }}>{renderText(currentPageData?.bodyTxt)}</p>
                     </div>
