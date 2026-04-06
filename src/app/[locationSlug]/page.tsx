@@ -347,7 +347,7 @@ export default function PlayerPage({ params }: { params: Promise<{ locationSlug:
                   <div className="absolute left-0 right-0 top-[65%] -translate-y-1/2 z-[100] h-[calc(26%-40px)] flex items-center justify-center pointer-events-none">
                     <div className={`w-[calc(100%-40px)] mx-auto h-full pointer-events-auto ${isClosingAlert ? 'animate-fluent-slide-down' : 'animate-fluent-slide-up'}`}>
                       {alertState === 'wrong' && (
-                         <div className="bg-gradient-to-b from-[#D62828] to-[#600e0e] text-white p-5 rounded-[40px] border-4 border-white shadow-2xl w-full h-full flex flex-col items-center relative overflow-hidden">
+                         <div className="bg-gradient-to-b from-[#D62828] to-[#600e0e] text-white pt-10 pb-5 px-5 rounded-[40px] border-4 border-white shadow-2xl w-full h-full flex flex-col items-center relative overflow-hidden">
                             <div className="flex flex-col items-center text-center w-full">
                                <h2 className="text-2xl font-black mb-1 uppercase" style={{ fontFamily: 'Barlow Semi Condensed' }}>Jammer</h2>
                                <p className="text-sm font-medium leading-tight px-4">
@@ -358,7 +358,7 @@ export default function PlayerPage({ params }: { params: Promise<{ locationSlug:
                          </div>
                       )}
                       {(alertState === 'correct' || alertState === 'hint') && (
-                        <div className="bg-gradient-to-tr from-amber-400 to-yellow-200 p-5 rounded-[40px] border-4 border-white shadow-2xl w-full h-full flex flex-col items-center relative overflow-hidden">
+                        <div className="bg-gradient-to-tr from-amber-400 to-yellow-200 pt-10 pb-5 px-5 rounded-[40px] border-4 border-white shadow-2xl w-full h-full flex flex-col items-center relative overflow-hidden">
                            <div className="flex flex-col items-center text-center w-full">
                               <p className="text-[#003566] text-center font-bold px-4">{alertState === 'correct' ? "Geweldig gedaan!" : `Hint: ${currentHintText}`}</p>
                            </div>
