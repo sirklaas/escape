@@ -282,6 +282,16 @@
             background: #0984e3;
         }
         
+        .btn-reset {
+            background: #e17055;
+            color: white;
+            margin-right: auto;
+        }
+        
+        .btn-reset:hover {
+            background: #d35400;
+        }
+        
         button:disabled {
             background: #dee2e6;
             color: #6c757d;
@@ -465,6 +475,7 @@
         <!-- Navigation -->
         <div class="navigation">
             <div class="nav-buttons">
+                <button id="resetBtn" class="btn-reset">Reset</button>
                 <button id="prevBtn" class="btn-previous">← Previous</button>
                 <button id="saveBtn" class="btn-save">Save</button>
                 <button id="nextBtn" class="btn-next">Next →</button>
@@ -547,6 +558,7 @@
             document.getElementById('prevBtn').addEventListener('click', () => navigate(-1));
             document.getElementById('nextBtn').addEventListener('click', () => navigate(1));
             document.getElementById('saveBtn').addEventListener('click', saveData);
+            document.getElementById('resetBtn').addEventListener('click', resetData);
             
             // Location fields
             ['locHeading', 'locSubheading', 'locBody'].forEach(id => {
@@ -669,6 +681,14 @@
             
             showStatus('Data saved successfully', 'success');
             clearUnsaved();
+        }
+        
+        function resetData() {
+            if (confirm('Are you sure you want to reset all local changes? This will clear local storage and reload from the server.')) {
+                localStorage.removeItem('escapeRoomData');
+                loadDataFromServer();
+                showStatus('Local cache cleared. Reloaded from server.', 'info');
+            }
         }
         
         async function saveToServer() {
