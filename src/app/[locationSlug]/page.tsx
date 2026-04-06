@@ -352,13 +352,13 @@ export default function PlayerPage({ params }: { params: Promise<{ locationSlug:
                             <p className="text-sm font-medium leading-tight px-4">
                                Helaas dat is niet helemaal juist<br />probeer het opnieuw
                             </p>
-                            <button onClick={() => closeAlert()} className="w-14 h-14 mt-8 bg-[#003566] text-white rounded-full border-4 border-white shadow-xl active:scale-95 flex items-center justify-center font-bold font-black">OK</button>
+                            <button onClick={() => closeAlert()} className="w-14 h-14 mt-12 bg-[#003566] text-white rounded-full border-4 border-white shadow-xl active:scale-95 flex items-center justify-center font-bold font-black">OK</button>
                          </div>
                       )}
                       {(alertState === 'correct' || alertState === 'hint') && (
                         <div className="bg-gradient-to-tr from-amber-400 to-yellow-200 p-8 rounded-[40px] border-4 border-white shadow-2xl w-full h-full flex flex-col items-center justify-center">
                            <p className="text-[#003566] text-center font-bold px-2">{alertState === 'correct' ? "Geweldig gedaan!" : `Hint: ${currentHintText}`}</p>
-                           <button onClick={() => closeAlert(alertState === 'correct' ? proceedNext : undefined)} className="w-14 h-14 mt-4 bg-[#003566] text-white rounded-full border-4 border-white shadow-xl active:scale-95 flex items-center justify-center font-black">OK</button>
+                           <button onClick={() => closeAlert(alertState === 'correct' ? proceedNext : undefined)} className="w-14 h-14 mt-12 bg-[#003566] text-white rounded-full border-4 border-white shadow-xl active:scale-95 flex items-center justify-center font-black">OK</button>
                         </div>
                       )}
                     </div>
