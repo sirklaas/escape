@@ -193,7 +193,7 @@ export default function PlayerPage({ params }: { params: Promise<{ locationSlug:
     if (!loc) return;
     const normalizedUserInput = answer.toLowerCase().trim();
     const normalizedCorrectAnswer = (loc.verificationAnswer || "").toLowerCase().trim();
-    if (normalizedUserInput === normalizedCorrectAnswer || !loc.verificationAnswer) {
+    if (normalizedCorrectAnswer !== "" && normalizedUserInput === normalizedCorrectAnswer) {
       setAlertState('correct');
       setTimeout(() => {
         setStep('intro');
