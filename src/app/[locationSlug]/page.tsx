@@ -337,9 +337,10 @@ export default function PlayerPage({ params }: { params: Promise<{ locationSlug:
                   <div className="absolute left-0 right-0 top-[65%] -translate-y-1/2 z-[100] h-[26%] flex items-center justify-center pointer-events-none">
                     <div className="w-[calc(100%-40px)] mx-auto h-full pointer-events-auto animate-fluent-slide-up">
                       {alertState === 'wrong' && (
-                         <div className="bg-[#D62828] text-white p-8 rounded-[40px] border-4 border-white shadow-2xl w-full h-full flex flex-col items-center justify-center">
-                            <p className="text-xl font-black mb-4">Helaas...</p>
-                            <button onClick={() => setAlertState('none')} className="w-14 h-14 bg-[#003566] text-white rounded-full border-4 border-white shadow-xl active:scale-95 flex items-center justify-center">OK</button>
+                         <div className="bg-gradient-to-b from-[#D62828] to-[#600e0e] text-white p-8 rounded-[40px] border-4 border-white shadow-2xl w-full h-full flex flex-col items-center justify-center text-center">
+                            <h2 className="text-2xl font-black mb-2 uppercase" style={{ fontFamily: 'Barlow Semi Condensed' }}>Helaas</h2>
+                            <p className="text-sm font-medium leading-tight">Helaas dat is niet helemaal juist probeer het opnieuw</p>
+                            <button onClick={() => setAlertState('none')} className="w-14 h-14 mt-[30px] bg-[#003566] text-white rounded-full border-4 border-white shadow-xl active:scale-95 flex items-center justify-center font-bold">OK</button>
                          </div>
                       )}
                       {(alertState === 'correct' || alertState === 'hint') && (
