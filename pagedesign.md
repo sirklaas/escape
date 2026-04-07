@@ -33,9 +33,13 @@ The content is divided into a vertical flex-column structure:
 
 ## 🧩 Puzzle Interaction (Page 1, 2, etc.)
 - **Input Layout**: 
-  - **Poging Pill**: A small pill (`w-1/3 h-10`) on the left of the input field showing the attempt count (`Poging: {attempts}`).
-  - **Input Field**: Flexible width input next to the pill, also `h-10` with rounded corners.
-  - **Primary Action**: A full-width "Check" button (`h-10`, Red background) below the input/pill row.
+  - **Row 1 (Top)**: Full-width pill shape input (`w-full h-10`) with placeholder "Wat denken jullie?".
+  - **Row 2 (Bottom)**: 
+    - **Left**: Small pill (`w-1/3 h-10`) showing `Poging: {attempts}`.
+    - **Right**: Flexible "Check" button (`flex-grow h-10`, Red background).
+  - **Spacing**: 
+    - **20px side margins** from left and right edges for both rows.
+    - **20px vertical gap** between Row 1 and Row 2.
 - **Success Metrics**: 
   - The correct answer popup must display the completion time (`Tijd: XX s`) centered below the "Geweldig gedaan!" text.
 

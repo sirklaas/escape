@@ -323,7 +323,6 @@ export default function DashboardPage() {
               <Field label="Heading"     value={loc.heading}    onChange={v => updateLoc('heading', v)}    />
               <Field label="Sub Heading" value={loc.subheading} onChange={v => updateLoc('subheading', v)} />
               <Field label="Body"        value={loc.body}       onChange={v => updateLoc('body', v)} area  />
-              <Field label="Start URL"   value={loc.startUrl}   onChange={v => updateLoc('startUrl', v)}   />
               <Field label="Map URL"     value={loc.mapUrl ?? ''} onChange={v => updateLoc('mapUrl', v)} />
               <Field label="Verificatie Antwoord" value={loc.verificationAnswer ?? ''} onChange={v => updateLoc('verificationAnswer', v)} highlight />
               <CheckboxField label="SKIP" checked={!!loc.skip}  onChange={v => updateLoc('skip', v)}       />
@@ -354,7 +353,6 @@ export default function DashboardPage() {
                   updatePage(page1.pageNumber, 'hints', h);
                 }} />
               ))}
-              <Field label="Next Page URL"  value={page1.nextPage}       onChange={v => updatePage(page1.pageNumber, 'nextPage', v)}      />
             </>}
           </div>
         </div>
@@ -382,7 +380,6 @@ export default function DashboardPage() {
                   updatePage(page2.pageNumber, 'hints', h);
                 }} />
               ))}
-              <Field label="Next Page URL"  value={page2.nextPage}       onChange={v => updatePage(page2.pageNumber, 'nextPage', v)}      />
             </>}
           </div>
         </div>

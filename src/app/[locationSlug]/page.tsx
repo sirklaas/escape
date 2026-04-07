@@ -65,6 +65,7 @@ export default function PlayerPage({ params }: { params: Promise<{ locationSlug:
   const [currentPageNumber, setCurrentPageNumber] = useState(1);
   const [isStarting, setIsStarting] = useState(false);
   const [isPlaying, setIsPlaying] = useState(false);
+  const [isFading, setIsFading] = useState(false);
   
   const [timer, setTimer] = useState(0);
   const [challengeTimer, setChallengeTimer] = useState(0);
@@ -123,6 +124,14 @@ export default function PlayerPage({ params }: { params: Promise<{ locationSlug:
         } else {
            setStep('intro');
         }
+        
+        // Find the first page for this location and set it as current
+        const locPages = pbData[activeV]?.pages?.filter(p => p.locationNumber === activeLoc?.locationNumber);
+        if (locPages && locPages.length > 0) {
+           const firstPageNum = Math.min(...locPages.map(p => p.pageNumber));
+           setCurrentPageNumber(firstPageNum);
+        }
+
         if (activeV === 'rat' || activeV === 'diner') setStep('puzzle');
       }
     } catch (err) {
@@ -171,7 +180,6 @@ export default function PlayerPage({ params }: { params: Promise<{ locationSlug:
     setIsStarting(true);
     setTimeout(() => {
       setStep('puzzle');
-      setCurrentPageNumber(1);
       setIsStarting(false);
     }, 800);
   };
@@ -240,14 +248,26 @@ export default function PlayerPage({ params }: { params: Promise<{ locationSlug:
   };
 
   const proceedNext = () => {
+    setIsFading(true);
     setAlertState('none');
-    const nextP = vData?.pages.find(p => p.locationNumber === locNumber && p.pageNumber === currentPageNumber + 1);
-    if (nextP) {
-      setCurrentPageNumber(prev => prev + 1);
-      setTimer(0); setChallengeTimer(0); setAttempts(0); setHintsRevealed(0); setShowHintButton(false);
-    } else {
-      setStep('video');
-    }
+    setTimeout(() => {
+      // If we're on the maps/verify screen, move to intro
+      if (step === 'direction' || step === 'verify') {
+        setStep('intro');
+      } else {
+        // Handle normal page progression
+        const nextP = vData?.pages.find(p => p.locationNumber === locNumber && p.pageNumber === currentPageNumber + 1);
+        if (nextP) {
+          setCurrentPageNumber(prev => prev + 1);
+          setTimer(0); setChallengeTimer(0); setAttempts(0); setHintsRevealed(0); setShowHintButton(false);
+        } else {
+          setStep('video');
+          // Important: Save progress for team_alpha so the dashboard /nine shows it as greyed out
+          markLocationCompleted("team_alpha", locationSlug.toLowerCase(), timer);
+        }
+      }
+      setIsFading(false);
+    }, 1000);
   };
 
   if (loading) return <div className="min-h-screen flex items-center justify-center bg-white"><Loader2 className="animate-spin text-gray-500 w-8 h-8" /></div>;
@@ -359,9 +379,9 @@ export default function PlayerPage({ params }: { params: Promise<{ locationSlug:
                       )}
                       {(alertState === 'correct' || alertState === 'hint') && (
                         <div className="bg-gradient-to-tr from-amber-400 to-yellow-200 rounded-[40px] border-4 border-white shadow-2xl w-full h-full flex flex-col items-center relative overflow-hidden">
-                           <div className="flex flex-col items-center text-center w-full mt-10">
+                            <div className="flex flex-col items-center text-center w-full mt-10">
                               <p className="text-[#003566] text-center font-bold px-2">{alertState === 'correct' ? "Geweldig gedaan!" : `Hint: ${currentHintText}`}</p>
-                              {alertState === 'correct' && (
+                              {alertState === 'correct' && step === 'puzzle' && (
                                 <p className="text-[#003566] text-lg font-bold mt-2">Tijd: {timer} s</p>
                               )}
                            </div>
@@ -377,12 +397,12 @@ export default function PlayerPage({ params }: { params: Promise<{ locationSlug:
                     <button onClick={handleStart} className={`w-[100px] h-[100px] bg-[#D62828] text-white rounded-full border-4 border-white text-xl font-medium shadow-2xl active:scale-95 transition-all transform ${isStarting ? 'opacity-0 scale-90' : 'opacity-100 scale-100'} duration-700`}>START</button>
                   )}
                   {step === 'puzzle' && (
-                    <div className="w-full px-6 space-y-3">
+                    <div className="absolute left-5 right-5 flex flex-col gap-5">
+                      <input type="text" value={answer} onChange={(e) => setAnswer(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && handleCheck()} placeholder="Wat denken jullie?" className="w-full h-10 rounded-full border-2 border-gray-200 text-center text-sm shadow-sm bg-white/95 transition-all outline-none" />
                       <div className="flex items-center justify-between w-full gap-4">
-                        <div className="w-1/3 h-10 flex items-center justify-center text-gray-900 font-light text-xs bg-white/90 rounded-full border border-gray-100 shadow-sm" style={{ fontWeight: 300 }}>Poging: {attempts}</div>
-                        <input type="text" value={answer} onChange={(e) => setAnswer(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && handleCheck()} placeholder="Wat denken jullie?" className="flex-grow h-10 rounded-full border-2 border-gray-200 text-center text-sm shadow-sm bg-white/95 transition-all outline-none" />
+                        <div className="w-1/2 h-10 flex items-center justify-center text-gray-900 font-light text-xs bg-white/90 rounded-full border border-gray-100 shadow-sm" style={{ fontWeight: 300 }}>Poging: {attempts}</div>
+                        <button onClick={handleCheck} className="w-1/2 h-10 bg-[#D62828] text-white rounded-full text-sm font-bold shadow-lg active:scale-95">Check</button>
                       </div>
-                      <button onClick={handleCheck} className="w-full h-10 bg-[#D62828] text-white rounded-full text-sm font-bold shadow-lg active:scale-95">Check</button>
                     </div>
                   )}
                 </div>
@@ -399,6 +419,56 @@ export default function PlayerPage({ params }: { params: Promise<{ locationSlug:
                 </div>
 
               </div>
+
+              {step === 'video' && (
+                <div className="absolute inset-0 bg-black z-20 flex flex-col items-center justify-center">
+                  <video 
+                    ref={videoRef} 
+                    src={(() => {
+                      const url = currentPageData?.nextPage || '';
+                      if (url.includes('/toka/')) return "/videos/tokenA.mp4";
+                      if (url.includes('/toke/')) return "/videos/tokenE.mp4";
+                      if (url.includes('/tokh/')) return "/videos/tokenH.mp4";
+                      return "/videos/tokenA.mp4";
+                    })()} 
+                    playsInline 
+                    className="absolute inset-0 w-full h-full object-cover" 
+                    onEnded={() => setIsPlaying(false)}
+                  />
+                  
+                  {!isPlaying && (
+                    <button onClick={togglePlay} className="absolute inset-0 flex items-center justify-center bg-black/40 z-10 w-full h-full outline-none">
+                      <div className="w-24 h-24 bg-white/20 backdrop-blur-md rounded-full flex items-center justify-center border-4 border-white/50 pl-3 shadow-2xl transition-transform active:scale-90">
+                         <svg fill="white" viewBox="0 0 24 24" className="w-12 h-12"><path d="M8 5v14l11-7z" /></svg>
+                      </div>
+                    </button>
+                  )}
+
+                  <div className="absolute bottom-8 z-30 w-[calc(100%-40px)] left-1/2 -translate-x-1/2">
+                    <button onClick={() => setStep('finished')} className="w-full h-16 bg-gradient-to-tr from-amber-400 to-yellow-200 text-[#003566] rounded-full border-4 border-white text-xl font-normal shadow-2xl active:scale-95 transition-all outline-none" style={{ fontWeight: 400 }}>
+                      Yes die hebben we
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              {step === 'finished' && (
+                <div className="absolute inset-0 bg-[#f8f8f8] z-40 flex flex-col items-center pt-8 px-5">
+                   <h2 className="text-4xl text-[#003566] font-black uppercase tracking-widest leading-tight drop-shadow-sm mb-4" style={{ fontFamily: 'Barlow Semi Condensed' }}>Leaderboard</h2>
+                   <div className="flex-1 w-full overflow-y-auto pb-24 flex flex-col items-center">
+                      <LeaderboardList />
+                   </div>
+                   
+                   <div className="absolute bottom-8 left-5 right-5 z-50">
+                      <button 
+                        onClick={() => window.location.href = '/nine'} 
+                        className="w-full h-14 bg-gradient-to-r from-[#D62828] to-[#9c1d1d] text-white rounded-full border-4 border-white text-lg font-bold shadow-2xl active:scale-95 transition-all outline-none"
+                      >
+                        Gauw de volgende doen
+                      </button>
+                   </div>
+                </div>
+              )}
             </div>
           </div>
         </div>
