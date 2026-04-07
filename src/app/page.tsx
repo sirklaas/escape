@@ -211,7 +211,7 @@ export default function DashboardPage() {
     <div style={{
       fontFamily: 'Barlow Semi Condensed, sans-serif',
       background: '#f8f9fa', color: '#2c3e50',
-      minHeight: '100vh', padding: '60px', boxSizing: 'border-box',
+      minHeight: '100vh', padding: '24px', boxSizing: 'border-box',
       display: 'flex', flexDirection: 'column',
     }}>
 
