@@ -359,8 +359,11 @@ export default function PlayerPage({ params }: { params: Promise<{ locationSlug:
                       )}
                       {(alertState === 'correct' || alertState === 'hint') && (
                         <div className="bg-gradient-to-tr from-amber-400 to-yellow-200 rounded-[40px] border-4 border-white shadow-2xl w-full h-full flex flex-col items-center relative overflow-hidden">
-                           <div className="flex flex-col items-center text-center w-full mt-12">
+                           <div className="flex flex-col items-center text-center w-full mt-10">
                               <p className="text-[#003566] text-center font-bold px-2">{alertState === 'correct' ? "Geweldig gedaan!" : `Hint: ${currentHintText}`}</p>
+                              {alertState === 'correct' && (
+                                <p className="text-[#003566] text-lg font-bold mt-2">Tijd: {timer} s</p>
+                              )}
                            </div>
                            <button onClick={() => closeAlert(alertState === 'correct' ? proceedNext : undefined)} className="absolute bottom-5 left-1/2 -translate-x-1/2 w-14 h-14 bg-[#003566] text-white rounded-full border-4 border-white shadow-xl active:scale-95 flex items-center justify-center font-black">OK</button>
                         </div>
@@ -375,7 +378,10 @@ export default function PlayerPage({ params }: { params: Promise<{ locationSlug:
                   )}
                   {step === 'puzzle' && (
                     <div className="w-full px-6 space-y-3">
-                      <input type="text" value={answer} onChange={(e) => setAnswer(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && handleCheck()} placeholder="Wat denken jullie?" className="w-full h-10 rounded-full border-2 border-gray-200 text-center text-sm shadow-sm bg-white/95 transition-all outline-none" />
+                      <div className="flex items-center justify-between w-full gap-4">
+                        <div className="w-1/3 h-10 flex items-center justify-center text-gray-900 font-light text-xs bg-white/90 rounded-full border border-gray-100 shadow-sm" style={{ fontWeight: 300 }}>Poging: {attempts}</div>
+                        <input type="text" value={answer} onChange={(e) => setAnswer(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && handleCheck()} placeholder="Wat denken jullie?" className="flex-grow h-10 rounded-full border-2 border-gray-200 text-center text-sm shadow-sm bg-white/95 transition-all outline-none" />
+                      </div>
                       <button onClick={handleCheck} className="w-full h-10 bg-[#D62828] text-white rounded-full text-sm font-bold shadow-lg active:scale-95">Check</button>
                     </div>
                   )}

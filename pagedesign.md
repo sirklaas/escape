@@ -31,10 +31,13 @@ The content is divided into a vertical flex-column structure:
   - **Correct**: Yellow/Amber gradient (`from-amber-400 to-yellow-200`).
 - **Animation**: Premium **2.0s duration** (`duration-[2000ms]`) for all slide-up and slide-down transitions.
 
-## 🎨 Typography & Interaction
-- **Primary Typeface**: `Barlow Semi Condensed` (Black/Bold for headings, Light/Regular for body).
-- **Transitions**: Non-interactive elements use `cubic-bezier(0.16, 1, 0.3, 1)` for fluid, natural motion.
-- **Button Feedback**: `active:scale-95` on all touch targets for tactical responsiveness.
+## 🧩 Puzzle Interaction (Page 1, 2, etc.)
+- **Input Layout**: 
+  - **Poging Pill**: A small pill (`w-1/3 h-10`) on the left of the input field showing the attempt count (`Poging: {attempts}`).
+  - **Input Field**: Flexible width input next to the pill, also `h-10` with rounded corners.
+  - **Primary Action**: A full-width "Check" button (`h-10`, Red background) below the input/pill row.
+- **Success Metrics**: 
+  - The correct answer popup must display the completion time (`Tijd: XX s`) centered below the "Geweldig gedaan!" text.
 
 ---
-*Last updated: 2026-04-06*
+*Last updated: 2026-04-07*
