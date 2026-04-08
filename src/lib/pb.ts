@@ -97,6 +97,7 @@ export async function saveEscapeData(data: EscapeData): Promise<boolean> {
 export interface TeamProgress {
   playedLocations: string[];
   times: Record<string, number>;
+  playerNames?: string[];
 }
 
 /**

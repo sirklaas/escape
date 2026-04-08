@@ -7,29 +7,29 @@ This document outlines the mobile-first design system for the Escape Room Player
 - **Standard Frame**: A consistent **20px white margin** (`inset-5`) around the entire content.
 - **Card Styling**: High-contrast, premium rounded corners (`rounded-[32px]`) with subtle `shadow-2xl`.
 
-## 📍 Page Segmentation (The 1/4 Flow)
-The content is divided into a vertical flex-column structure:
-1.  **Top Section (1/4 - 25%)**: 
-    - **Purpose**: Brand identity and navigation markers.
-    - **Logo**: Centered, 20px below the top of the frame.
-    - **Header**: Location codes (e.g., `5F9Q+M5 LEIDEN`) in `text-gray-300`, centered.
-2.  **Middle Section (2/4 - 55%)**: 
-    - **Purpose**: Primary interaction area (Maps, Verification, or Puzzles).
-    - **Content**: Map iframes, Intro text, or Input fields.
-    - **Alignment**: Items are centered within this block.
-3.  **Bottom Section (1/4 - 20%)**: 
-    - **Purpose**: Footer actions and timers.
-    - **Timer**: A large, circular SVG timer (`80px`) with a red progress stroke.
-    - **Action Button**: Standardized height (`h-10`) with a blue gradient background (`from-[#004e92] to-[#000428]`).
+## 📍 Page Segmentation (Vertical Flow)
+The viewport is divided into five vertical sections for precise layout control:
+1.  **Top Header (10%)**: 
+    - **Purpose**: Displays global status (e.g., "Tijd: XX s") centered in a blurred stone-colored pill.
+2.  **Spacer (20%)**: 
+    - **Purpose**: Visual breathing room to center content lower on the screen for thumb reach.
+3.  **Content Area (30%)**: 
+    - **Purpose**: Primary interaction area (Maps, Verification instructions, or Puzzle text).
+    - **Transition**: Uses `animate-in fade-in duration-[2000ms]`.
+4.  **Control Area (20%)**: 
+    - **Purpose**: Action inputs (Check button, Answer field, or Page-1 "START" button).
+5.  **Footer Area (20%)**: 
+    - **Purpose**: Circular timer and navigation markers.
+    - **Timer**: Circular SVG (`80px`) with red stroke (`#D62828`).
 
 ## 🚨 Popup High-Priority Specifications (Alerts)
 - **Fixed Size**: Must be exactly **200px (Height)** and **280px (Width)**.
-- **Top Offset**: Heading ("Jammer") and body text start exactly **40px from the top** (`mt-10`).
-- **Bottom Offset**: OK circle button is anchored exactly **20px from the bottom** (`bottom-5`).
-- **Style**:
-  - **Wrong**: Red vertical gradient (`from-[#D62828] to-[#800000]`), white text.
-  - **Correct**: Yellow/Amber gradient (`from-amber-400 to-yellow-200`).
-- **Animation**: Premium **2.0s duration** (`duration-[2000ms]`) for all slide-up and slide-down transitions.
+- **Top Offset**: Text starts exactly **40px from the top** (`mt-10` or `pt-10`).
+- **Bottom Offset**: OK circle button is centered and anchored **20px from the bottom** (`bottom-5`).
+- **Styles**:
+  - **Wrong (Jammer)**: Red vertical gradient (`from-[#D62828] to-[#800000]`), white text.
+  - **Correct / Hint**: Yellow/Amber gradient (`from-amber-400 to-yellow-200`), Navy text (`text-[#003566]`).
+- **Animation**: Premium **2.0s duration** (`duration-[2000ms]`) for slide-up and slide-down transitions.
 
 ## 🧩 Puzzle Interaction (Page 1, 2, etc.)
 - **Input Layout**: 
@@ -43,5 +43,10 @@ The content is divided into a vertical flex-column structure:
 - **Success Metrics**: 
   - The correct answer popup must display the completion time (`Tijd: XX s`) centered below the "Geweldig gedaan!" text.
 
+## 🎨 Backgrounds & Assets
+- **Navigation/Verify**: Uses `Loc.jpg` backdrop.
+- **Puzzle/Intro**: Uses `Escapebackdrop.jpg` backdrop.
+- **Contrast**: Content is often placed inside a `rounded-[20px]` container with 20px padding (white background) to ensure legibility.
+
 ---
-*Last updated: 2026-04-07*
+*Last updated: 2026-04-08*
