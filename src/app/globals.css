@@ -2,6 +2,46 @@
 @import "tailwindcss";
 
 :root {
+  /* Player canvas — globaldesign §2.1 / §2.3 (PhoneWrapper, all viewports).
+     Slightly under “large Pro” logical size so the mockup reads more device-like on desktop. */
+  --ge-canvas-max-w: 375px;
+  --ge-canvas-max-h: 812px;
+
+  /*
+   * Corner radii — repo “original” specs:
+   * - `pagedesign.md`: player card / white frame `rounded-[32px]`
+   * - `globaldesign.md`: inner screen ~25px
+   * - §5.4: blue_back slightly tighter than inner screen
+   */
+  --ge-radius-image-container: 32px;
+  --ge-radius-inner-screen: 25px;
+  --ge-radius-blue-back: 20px;
+
+  /*
+   * Pill + modal fills — source of truth: escapedesign/variants.html (`button_*`, `popup_*`).
+   */
+  --ge-yellow-gradient: linear-gradient(90deg, #e6c300 0%, #faf8e8 100%);
+  --ge-blue-gradient: linear-gradient(270deg, rgba(79, 110, 184, 1) 0%, rgba(16, 29, 66, 1) 100%);
+  --ge-red-gradient: linear-gradient(
+    90deg,
+    rgba(143, 20, 20, 1) 58%,
+    rgba(212, 17, 17, 0.45) 100%
+  );
+  --ge-popup-yellow: linear-gradient(
+    193.3deg,
+    rgba(255, 246, 168, 1) 0%,
+    rgba(217, 168, 0, 1) 100%
+  );
+  --ge-popup-red: linear-gradient(
+    55.2deg,
+    rgba(150, 29, 29, 1) 0%,
+    rgba(255, 148, 148, 1) 100%
+  );
+
+  /* §3 typography — canonical player H1 / body (16px root): 1.7rem / 1.1rem */
+  --ge-type-h1-size: 1.7rem; /* ~27.2px */
+  --ge-type-body-size: 1.1rem; /* ~17.6px */
+
   --bg-base: #f4f6f9;
   --bg-surface: #ffffff;
   --bg-card: #ffffff;
@@ -34,13 +74,427 @@ html, body {
   background: var(--bg-base);
   color: var(--text-primary);
   font-family: 'Inter', sans-serif;
-  font-size: 13px;
+  font-size: 16px;
   line-height: 1.5;
   -webkit-font-smoothing: antialiased;
 }
 
+/*
+ * Layout: only `image_container` + `action_container` are named in globaldesign.md §2.4.
+ * Inner clip + backdrop: first child div inside `image_container` (see PhoneWrapper.tsx).
+ */
+.image_container {
+  position: relative;
+  box-sizing: border-box;
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  height: 100%;
+  min-height: 0;
+  overflow: hidden;
+  background: #fff;
+  padding: 20px 20px max(20px, env(safe-area-inset-bottom, 0px)) 20px;
+  border-radius: var(--ge-radius-image-container);
+  box-shadow: 0 4px 20px rgba(13, 31, 74, 0.12);
+}
+
+.image_container > div {
+  position: relative;
+  box-sizing: border-box;
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  height: 100%;
+  min-height: 0;
+  overflow: hidden;
+  border-radius: var(--ge-radius-inner-screen);
+  background-color: #f8f8f8;
+}
+
+/* Great Escape — player UI tokens (globaldesign.md) */
+.player-view {
+  /* Size container so `cqh` on descendants = % of this inner screen (not nested flex parents). */
+  container-type: size;
+  container-name: ge-player;
+  --ge-navy: #0d1f4a;
+  --ge-text-h1: #3a3243;
+  --ge-red: #e42f2f;
+  --ge-blue-back: linear-gradient(35.3deg, #2f7dd4 0%, #5ca8f0 50%, #bfe0ff 100%);
+  /* Inset of scroll column from inner screen edges — nothing may sit closer to the bezel than this */
+  --ge-action-inset: 20px;
+  --ge-placeholder: #b0b0b0;
+  --ge-ease-fluent: cubic-bezier(0.32, 0.72, 0, 1);
+}
+
+.player-view .ge-intro-inner {
+  background: var(--ge-blue-back);
+  border-radius: var(--ge-radius-blue-back);
+  box-shadow: 0 10px 28px rgba(13, 31, 74, 0.2);
+}
+
+/*
+ * `action_container` — safe column: inset `--ge-action-inset` from inner screen
+ * (left, right, and bottom). Foot CTAs: `mt-auto` inside this column.
+ */
+.player-view .action_container {
+  display: flex;
+  /* 65% of `.player-view` inner height; `margin-top: auto` anchors the block to the inner bottom */
+  flex: 0 0 auto;
+  height: 65cqh;
+  max-height: 65cqh;
+  margin-top: auto;
+  flex-direction: column;
+  min-height: 0;
+  min-width: 0;
+  box-sizing: border-box;
+  width: calc(100% - (2 * var(--ge-action-inset)));
+  max-width: 100%;
+  margin-left: auto;
+  margin-right: auto;
+  margin-bottom: max(var(--ge-action-inset), env(safe-area-inset-bottom, 0px));
+  align-items: stretch;
+  text-align: center;
+  gap: 1rem;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  padding-bottom: 0;
+  border: 2px solid #000;
+  border-radius: 0;
+}
+
+/* Tight vertical rhythm (e.g. location %‑height stacks) — overrides default action gap */
+.player-view .action_container.action-container--flush {
+  gap: 0;
+}
+
+/* Full scroll column for design / QA pages (overrides 65cqh action column) */
+.player-view .action_container.action-container--lab {
+  height: auto;
+  max-height: none;
+  flex: 1 1 auto;
+  margin-top: 0;
+  min-height: 0;
+}
+
+/* Full-area overlay that must still respect `--ge-action-inset` (e.g. leaderboard) */
+.player-view .action_container.action-container--absolute-inset {
+  position: absolute;
+  z-index: 40;
+  top: 0;
+  left: var(--ge-action-inset);
+  right: var(--ge-action-inset);
+  bottom: max(var(--ge-action-inset), env(safe-area-inset-bottom, 0px));
+  width: auto;
+  max-width: none;
+  margin-left: 0;
+  margin-right: 0;
+  margin-bottom: 0;
+  margin-top: 0;
+  height: auto;
+  max-height: none;
+  flex: none;
+}
+
+/* Element + class beats Tailwind base `h1 { font-size: inherit }` and generic resets */
+.player-view h1.ge-h1,
+.player-view h2.ge-h1,
+.player-view h3.ge-h1,
+.player-view .ge-h1 {
+  font-family: 'Barlow Semi Condensed', sans-serif;
+  font-size: var(--ge-type-h1-size);
+  font-weight: 400;
+  line-height: 1.2;
+  letter-spacing: normal;
+  text-transform: none;
+  font-variant: normal;
+  color: var(--ge-text-h1);
+  text-shadow: 0 1px 0 rgba(255, 255, 255, 0.42);
+}
+
+.player-view p.ge-body,
+.player-view .ge-body {
+  font-family: 'Barlow Semi Condensed', sans-serif;
+  font-size: var(--ge-type-body-size);
+  font-weight: 300;
+  line-height: 1.45;
+  color: var(--ge-navy);
+}
+
+/*
+ * Pills — escapedesign/variants.html (`.button_yellow`, `.button_blue`, `.button_red`).
+ * `button.ge-btn-*` beats Tailwind preflight on `<button>`.
+ */
+.player-view button.ge-btn-yellow {
+  -webkit-appearance: none !important;
+  appearance: none !important;
+  box-sizing: border-box;
+  font-family: 'Barlow Semi Condensed', sans-serif;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  margin-top: 20px;
+  margin-bottom: 20px;
+  width: 100%;
+  max-width: 248px;
+  height: 35px;
+  padding: 0 1.25rem;
+  border-radius: 9999px;
+  border: 2px solid #fff !important;
+  background-color: #e6c300 !important;
+  background-image: var(--ge-yellow-gradient) !important;
+  color: #0d1f4a !important;
+  font-weight: 400;
+  font-size: 1rem;
+  letter-spacing: normal;
+  line-height: 1.15;
+  text-align: center;
+  text-transform: none;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.12) !important;
+  transition: transform 0.22s var(--ge-ease-fluent);
+}
+
+/* Chained `button` + both classes beats `.player-view button.ge-btn-*` (0,2,1) so foot margins actually zero */
+.player-view button.ge-btn-yellow.ge-btn-yellow--foot,
+.player-view button.ge-btn-blue.ge-btn-blue--foot,
+.player-view button.ge-btn-red.ge-btn-red--foot {
+  margin-top: 0;
+  margin-bottom: 0;
+  align-self: center;
+}
+
+.player-view button.ge-btn-red.ge-btn-red--foot {
+  padding: 0;
+}
+
+.player-view button.ge-btn-yellow:active:not(:disabled) {
+  transform: scale(0.98);
+}
+
+.player-view button.ge-btn-yellow:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.player-view button.ge-btn-blue {
+  -webkit-appearance: none !important;
+  appearance: none !important;
+  box-sizing: border-box;
+  font-family: 'Barlow Semi Condensed', sans-serif;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  margin-top: 20px;
+  margin-bottom: 20px;
+  width: 100%;
+  max-width: 248px;
+  height: 35px;
+  padding: 0 1.5rem;
+  border-radius: 9999px;
+  border: 2px solid #fff !important;
+  background-color: #101d42 !important;
+  background-image: var(--ge-blue-gradient) !important;
+  color: #fff !important;
+  font-weight: 400;
+  font-size: 1rem;
+  letter-spacing: normal;
+  line-height: 1.15;
+  text-align: center;
+  text-transform: none;
+  box-shadow:
+    0 4px 20px rgba(140, 120, 220, 0.35),
+    0 0 28px rgba(200, 180, 255, 0.28) !important;
+  transition:
+    transform 0.22s var(--ge-ease-fluent),
+    filter 0.2s ease;
+}
+
+.player-view button.ge-btn-blue:active:not(:disabled) {
+  transform: scale(0.98);
+  filter: brightness(0.95);
+}
+
+.player-view button.ge-btn-red {
+  -webkit-appearance: none !important;
+  appearance: none !important;
+  box-sizing: border-box;
+  font-family: 'Barlow Semi Condensed', sans-serif;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  margin-top: 20px;
+  margin-bottom: 20px;
+  width: 100%;
+  max-width: 248px;
+  height: 35px;
+  padding: 0 1rem;
+  border-radius: 9999px;
+  border: 2px solid #fff !important;
+  /* Single `background` like variants.html — no solid underlay (it was skewing the fade) */
+  background: linear-gradient(
+    90deg,
+    rgba(143, 20, 20, 1) 58%,
+    rgba(212, 17, 17, 0.45) 100%
+  ) !important;
+  color: #fff !important;
+  font-weight: 400;
+  font-size: 0.9375rem;
+  letter-spacing: normal;
+  line-height: 1.15;
+  text-align: center;
+  text-transform: none;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.18) !important;
+  transition:
+    transform 0.22s var(--ge-ease-fluent),
+    filter 0.2s ease;
+}
+
+.player-view button.ge-btn-red:active {
+  transform: scale(0.98);
+  filter: brightness(0.96);
+}
+
+.player-view .ge-pill-input {
+  font-family: 'Barlow Semi Condensed', sans-serif;
+  width: 100%;
+  max-width: 300px;
+  min-height: 40px;
+  padding: 0 1rem;
+  border-radius: 9999px;
+  border: 2px solid rgba(255, 255, 255, 0.85);
+  background: #fff;
+  color: var(--ge-navy);
+  text-align: center;
+  font-size: clamp(0.9375rem, 2.8vw, 1.0625rem);
+  box-shadow: 0 2px 12px rgba(13, 31, 74, 0.1);
+  outline: none;
+  transition: box-shadow 0.2s ease, border-color 0.2s ease;
+}
+
+.player-view .ge-pill-input::placeholder {
+  color: var(--ge-placeholder);
+}
+
+.player-view .ge-pill-input:focus {
+  border-color: var(--ge-navy);
+  box-shadow: 0 2px 16px rgba(13, 31, 74, 0.16);
+}
+
+/* Popups — variants.html fills; OK disc sits inside the card (no negative offset). */
+.player-view .ge-popup-yellow,
+.player-view .ge-popup-red {
+  position: relative;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  min-height: 200px;
+  margin: 0 auto;
+  padding: 1.75rem 1.25rem 1.25rem;
+  border-radius: 40px;
+  text-align: center;
+  border: 6px solid #fff;
+  box-shadow: 0 16px 48px rgba(0, 0, 0, 0.22);
+}
+
+.player-view .ge-popup-yellow {
+  background: var(--ge-popup-yellow);
+}
+
+.player-view .ge-popup-red {
+  background: var(--ge-popup-red);
+}
+
+.player-view .ge-popup-yellow .ge-popup__title,
+.player-view .ge-popup-red .ge-popup__title {
+  margin: 0;
+  font-family: 'Barlow Semi Condensed', sans-serif;
+  font-size: 1.125rem;
+  font-weight: 700;
+  color: #0d1f4a;
+  line-height: 1.25;
+}
+
+.player-view .ge-popup-yellow .ge-popup__title {
+  font-size: 29px;
+}
+
+.player-view .ge-popup-red .ge-popup__title {
+  font-size: 27px;
+  font-weight: 500;
+}
+
+.player-view .ge-popup-yellow .ge-popup__meta,
+.player-view .ge-popup-red .ge-popup__meta {
+  margin: 0.85rem 0 0;
+  font-family: 'Barlow Semi Condensed', sans-serif;
+  font-size: 1.5rem;
+  font-weight: 400;
+  color: #0d1f4a;
+  line-height: 1.2;
+}
+
+.player-view .ge-popup-yellow .ge-popup__message,
+.player-view .ge-popup-red .ge-popup__message {
+  margin: 0;
+  font-family: 'Barlow Semi Condensed', sans-serif;
+  font-size: 1rem;
+  font-weight: 400;
+  color: #0d1f4a;
+  line-height: 1.35;
+  text-align: center;
+}
+
+.player-view button.ge-popup__ok {
+  -webkit-appearance: none !important;
+  appearance: none !important;
+  position: relative;
+  width: 62px;
+  height: 62px;
+  margin-top: auto;
+  flex-shrink: 0;
+  padding: 0;
+  border-radius: 50%;
+  border: 6px solid #fff !important;
+  background: #0d1f4a !important;
+  background-image: none !important;
+  color: #fff !important;
+  font-family: 'Barlow Semi Condensed', sans-serif;
+  font-weight: 500;
+  font-size: 0.9375rem;
+  line-height: 1;
+  cursor: pointer;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.15s ease;
+}
+
+.player-view button.ge-popup__ok:active {
+  transform: scale(0.96);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .player-view button.ge-btn-yellow,
+  .player-view button.ge-btn-blue,
+  .player-view button.ge-btn-red,
+  .player-view button.ge-popup__ok {
+    transition: none;
+  }
+}
+
 /* Scoped styles for the Player Page to prevent dashboard regressions */
-.player-view h1, .player-view h2, .player-view h3, .player-view h4, .player-view h5 {
+.player-view h1:not(.ge-h1),
+.player-view h2,
+.player-view h3,
+.player-view h4,
+.player-view h5 {
   font-family: 'Barlow Semi Condensed', sans-serif;
   font-weight: 400;
   letter-spacing: 0.05em;
@@ -62,6 +516,13 @@ html, body {
   to { opacity: 0; transform: translateY(30px) scale(0.95); }
 }
 .player-view .animate-fluent-slide-down { animation: fluent-slide-down 2s cubic-bezier(0.16, 1, 0.3, 1); }
+
+/* CMS — always full browser viewport; no player phone chrome (see globaldesign §2.4) */
+.dashboard-fullscreen {
+  min-height: 100dvh;
+  width: 100%;
+  max-width: none;
+}
 
 /* Global Utilities */
 @keyframes pulse-dot {

@@ -1,7 +1,7 @@
 "use server";
 
 import PocketBase from 'pocketbase';
-import { PB_URL } from '@/lib/pb';
+import { PB_URL, PB_TEAM_ROWS_FILTER, PB_TEAM_SESSION_CITY, isPocketBaseSkipped } from '@/lib/pb';
 
 export type LeaderboardEntry = {
   teamName: string;
@@ -9,16 +9,17 @@ export type LeaderboardEntry = {
 };
 
 export async function getLeaderboardData(): Promise<LeaderboardEntry[]> {
-  // Always instantiate a distinct PB instance in server actions to prevent auth state leakage between requests
+  if (isPocketBaseSkipped()) return [];
+
   const pb = new PocketBase(PB_URL);
 
   try {
     // Authenticate securely on the server using the master credentials provided in the legacy file
-    await pb.admins.authWithPassword("klaas@republick.nl", "biknu8-pyrnaB-mytvyx");
+    // await pb.admins.authWithPassword("klaas@republick.nl", "biknu8-pyrnaB-mytvyx");
 
     // Pull every tracking row marked as a team session
     const records = await pb.collection('escape_game_data').getFullList({
-      filter: 'city="team_session"'
+      filter: PB_TEAM_ROWS_FILTER,
     });
 
     const entries: LeaderboardEntry[] = [];
@@ -61,5 +62,101 @@ export async function getLeaderboardData(): Promise<LeaderboardEntry[]> {
   } catch (err) {
     console.error("Critical failure pulling leaderboard data Server-Side:", err);
     return [];
+  }
+}
+
+export async function checkTeamExistsAction(teamName: string): Promise<boolean> {
+  if (isPocketBaseSkipped()) return false;
+
+  const pb = new PocketBase(PB_URL);
+  try {
+    // await pb.admins.authWithPassword("klaas@republick.nl", "biknu8-pyrnaB-mytvyx");
+    const record = await pb.collection('escape_game_data').getFirstListItem(`team_name = "${teamName}"`, { requestKey: null });
+    return !!record;
+  } catch (err) {
+    return false;
+  }
+}
+
+export async function getLastSavedTeamAction(): Promise<string | null> {
+  if (isPocketBaseSkipped()) return null;
+
+  const pb = new PocketBase(PB_URL);
+  try {
+    // await pb.admins.authWithPassword("klaas@republick.nl", "biknu8-pyrnaB-mytvyx");
+    const records = await pb.collection('escape_game_data').getList(1, 1, {
+      sort: '-created',
+      filter: PB_TEAM_ROWS_FILTER,
+    });
+    if (records.items.length > 0) {
+      return records.items[0].team_name;
+    }
+    return null;
+  } catch (err) {
+    console.error("Failed to get last saved team:", err);
+    return null;
+  }
+}
+
+export async function initializeTeamAction(teamName: string): Promise<{ success: boolean; message?: string }> {
+  if (isPocketBaseSkipped()) {
+    return { success: true };
+  }
+
+  const pb = new PocketBase(PB_URL);
+  try {
+    // await pb.admins.authWithPassword("klaas@republick.nl", "biknu8-pyrnaB-mytvyx");
+    
+    // Check if team name already exists
+    try {
+      const record = await pb.collection('escape_game_data').getFirstListItem(`team_name = "${teamName}"`);
+      if (record) return { success: false, message: 'Deze teamnaam bestaat al. Wees creatief en kies een andere naam.' };
+    } catch (err) {
+       // record not found, continue
+    }
+
+    // Initialize with empty gamedata for a new session
+    const data = {
+      team_name: teamName,
+      gamedata: JSON.stringify({
+        playedLocations: [],
+        times: {},
+      }),
+      nr_teams: 1,
+      city: PB_TEAM_SESSION_CITY,
+      total_time: Date.now(),
+      current_page: 0,
+      challenge_timer: 0,
+    };
+    
+    await pb.collection('escape_game_data').create(data);
+    return { success: true };
+  } catch (err) {
+    console.error("Failed to initialize team:", err);
+    return { success: false, message: 'Er is een fout opgetreden bij het opslaan van de teamnaam. Probeer het opnieuw.' };
+  }
+}
+
+export async function updatePlayerNamesAction(teamName: string, playerNames: string[]): Promise<boolean> {
+  if (isPocketBaseSkipped()) {
+    return true;
+  }
+
+  const pb = new PocketBase(PB_URL);
+  try {
+    // await pb.admins.authWithPassword("klaas@republick.nl", "biknu8-pyrnaB-mytvyx");
+    
+    const record = await pb.collection('escape_game_data').getFirstListItem(`team_name = "${teamName}"`);
+    const currentGamedata = typeof record.gamedata === 'string' ? JSON.parse(record.gamedata) : record.gamedata;
+    
+    currentGamedata.playerNames = playerNames;
+    
+    await pb.collection('escape_game_data').update(record.id, {
+      gamedata: JSON.stringify(currentGamedata)
+    });
+    return true;
+  } catch (err) {
+    console.error("Failed to update player names:", err);
+    return false;
   }
 }

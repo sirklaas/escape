@@ -207,11 +207,14 @@ export default function DashboardPage() {
     info:    { bg: '#d1ecf1', color: '#0c5460', border: '#17a2b8' },
   };
 
+  /* Full viewport: never use PhoneWrapper / image_container / action_container here (globaldesign §2.4). */
   return (
-    <div style={{
+    <div
+      className="dashboard-fullscreen"
+      style={{
       fontFamily: 'Barlow Semi Condensed, sans-serif',
       background: '#f8f9fa', color: '#2c3e50',
-      minHeight: '100vh', padding: '24px', boxSizing: 'border-box',
+      minHeight: '100dvh', width: '100%', maxWidth: 'none', padding: '24px', boxSizing: 'border-box',
       display: 'flex', flexDirection: 'column',
     }}>
 

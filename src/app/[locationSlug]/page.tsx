@@ -1,9 +1,11 @@
 'use client';
 
 import { useEffect, useState, useCallback, use, useRef } from 'react';
+import Link from 'next/link';
 import { fetchEscapeData, type EscapeData, type GameVariant, type EscapePage, type EscapeLocation, markLocationCompleted } from '@/lib/pb';
 import { getLeaderboardData, type LeaderboardEntry } from '@/app/actions';
 import { Loader2 } from 'lucide-react';
+import PhoneWrapper from '@/components/PhoneWrapper';
 
 const GAME_SETTINGS = {
   hintButtonAppearTime: 120,
@@ -270,29 +272,62 @@ export default function PlayerPage({ params }: { params: Promise<{ locationSlug:
     }, 1000);
   };
 
-  if (loading) return <div className="min-h-screen flex items-center justify-center bg-white"><Loader2 className="animate-spin text-gray-500 w-8 h-8" /></div>;
-  if (!data || !loc) return <div className="min-h-screen flex items-center justify-center text-gray-900 bg-white">Location Not Found</div>;
+  if (loading)
+    return (
+      <PhoneWrapper backgroundImage="/Escapebackdrop.jpg">
+        <div className="player-view relative z-10 flex h-full w-full min-h-0 flex-1 flex-col overflow-hidden">
+          <div className="action_container min-h-0 flex flex-1 items-center justify-center">
+            <Loader2 className="h-8 w-8 animate-spin text-gray-500" />
+          </div>
+        </div>
+      </PhoneWrapper>
+    );
+  if (!data || !loc)
+    return (
+      <PhoneWrapper backgroundImage="/Escapebackdrop.jpg">
+        <div className="player-view relative z-10 flex h-full w-full min-h-0 flex-1 flex-col overflow-hidden">
+          <div className="action_container min-h-0 flex flex-1 flex-col items-center justify-center gap-4 px-6 text-center text-gray-900">
+            <p className="text-lg font-semibold">Location Not Found</p>
+            <p className="text-sm text-gray-600">
+              Geen uitdaging voor &quot;{decodeURIComponent(locationSlug)}&quot;, of game-data kon niet worden geladen
+              (controleer PocketBase MASTER_DASHBOARD).
+            </p>
+            <Link
+              href="/"
+              className="rounded-full bg-[#0d1f4a] px-6 py-2 text-sm font-medium text-white no-underline"
+            >
+              Terug naar start
+            </Link>
+          </div>
+        </div>
+      </PhoneWrapper>
+    );
 
   const dashArray = 2 * Math.PI * 38;
   const currentLimit = currentPageData?.timerLimit ?? GAME_SETTINGS.challengeDuration;
   const progress = challengeTimer / currentLimit;
   const dashOffset = dashArray * (1 - progress);
 
+  const playerBackgroundImage =
+    step === 'video' ? '' : step === 'direction' || step === 'verify' ? '/Loc.jpg' : '/Escapebackdrop.jpg';
+
   return (
-    <div className="player-view">
+    <>
       <style jsx global>{`
         @import url('https://fonts.googleapis.com/css2?family=Barlow+Semi+Condensed:wght@300;400;500;600;800&display=swap');
         body { font-family: 'Barlow Semi Condensed', sans-serif; margin: 0; padding: 0; background: white; overflow: hidden; }
         @keyframes pulse-slow { 0%, 100% { opacity: 1; transform: scale(1); } 50% { opacity: 0.8; transform: scale(0.98); } }
         .animate-pulse-slow { animation: pulse-slow 3s infinite ease-in-out; }
       `}</style>
-      
-      <div className="min-h-screen bg-gray-100 flex items-center justify-center p-0 md:p-10 overflow-auto">
-        <div className="w-full h-[100dvh] md:w-[380px] md:h-[800px] bg-black md:rounded-[60px] md:border-[8px] md:border-zinc-900 md:shadow-[0_25px_50px_-12px_rgba(0,0,0,0.5)] relative overflow-hidden flex flex-col">
-          <div className="relative flex-1 overflow-hidden flex flex-col h-full" style={{ background: 'white', padding: '20px' }}>
-            <div className="relative flex-1 rounded-[20px] overflow-hidden flex flex-col h-full bg-[#f8f8f8]" style={{ backgroundImage: step === 'video' ? 'none' : ( (step === 'direction' || step === 'verify') ? 'url("/Loc.jpg")' : 'url("/Escapebackdrop.jpg")'), backgroundSize: 'cover', backgroundPosition: 'top center', backgroundRepeat: 'no-repeat' }}>
-              <div className="flex-1 flex flex-col h-full w-full relative z-10 overflow-visible" style={{ opacity: step === 'video' ? 0 : 1, pointerEvents: step === 'video' ? 'none' : 'auto' }}>
-                
+
+      <PhoneWrapper backgroundImage={playerBackgroundImage}>
+        <div className="player-view relative z-10 flex h-full w-full min-h-0 flex-1 flex-col overflow-hidden">
+          <div className="relative flex min-h-0 flex-1 flex-col overflow-hidden">
+            <div
+              className="action_container action-container--flush relative z-10 flex min-h-0 flex-1 flex-col overflow-visible"
+              style={{ opacity: step === 'video' ? 0 : 1, pointerEvents: step === 'video' ? 'none' : 'auto' }}
+            >
+
                 <div className="h-[10%] flex items-center justify-center px-4 w-full">
                   {step === 'puzzle' && (
                     <div className="bg-stone-200/80 backdrop-blur-md text-stone-600 px-6 py-2 rounded-full font-light text-xl shadow-md border border-white/30 text-center tracking-wide w-full max-w-[280px]" style={{ fontWeight: 300 }}>Tijd: {timer} s</div>
@@ -453,7 +488,7 @@ export default function PlayerPage({ params }: { params: Promise<{ locationSlug:
               )}
 
               {step === 'finished' && (
-                <div className="absolute inset-0 bg-[#f8f8f8] z-40 flex flex-col items-center pt-8 px-5">
+                <div className="action_container action-container--flush action-container--absolute-inset flex flex-col items-center bg-[#f8f8f8] pt-8">
                    <h2 className="text-4xl text-[#003566] font-black uppercase tracking-widest leading-tight drop-shadow-sm mb-4" style={{ fontFamily: 'Barlow Semi Condensed' }}>Leaderboard</h2>
                    <div className="flex-1 w-full overflow-y-auto pb-24 flex flex-col items-center">
                       <LeaderboardList />
@@ -469,10 +504,9 @@ export default function PlayerPage({ params }: { params: Promise<{ locationSlug:
                    </div>
                 </div>
               )}
-            </div>
           </div>
         </div>
-      </div>
-    </div>
+      </PhoneWrapper>
+    </>
   );
 }
