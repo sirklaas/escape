@@ -138,7 +138,12 @@ html, body {
  */
 .player-view .action_container {
   display: flex;
-  flex: 1 1 auto;
+  /* 60% height protection for top-half logos in background assets */
+  flex: 0 0 auto;
+  height: 60cqh;
+  max-height: 60cqh;
+  margin-top: auto;
+  border: 1px solid black;
   flex-direction: column;
   min-height: 0;
   min-width: 0;

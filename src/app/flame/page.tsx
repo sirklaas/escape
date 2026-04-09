@@ -171,8 +171,8 @@ export default function FlamePage() {
 
         <div 
           ref={containerRef}
-          className="action_container relative z-10 flex flex-col items-center py-6" 
-          style={{ height: '70cqh', maxHeight: '70cqh', marginTop: 'auto', border: '1px solid black', touchAction: 'none' }}
+          className="action_container min-h-0 flex-1 overflow-hidden pt-4" 
+          style={{ height: '60cqh', maxHeight: '60cqh', marginTop: 'auto', border: '1px solid black', touchAction: 'none' }}
           onPointerMove={onMove}
         >
           <div className="pointer-events-none flex flex-col items-center gap-6 w-full pt-2 flex-1">
