@@ -24,11 +24,11 @@ export default function WatzullenwePage() {
   return (
     <PlayerChrome backgroundImage="/Escapebackdrop.jpg" wrapWithActionContainer={false}>
       {/* 
-        Clicking anywhere on the screen will trigger the sound 
-        if autoplay was blocked.
+        The background image is supplied by PhoneWrapper (wrapped by PlayerChrome).
+        We ensure this container is transparent and fills the viewport.
       */}
       <div 
-        className="relative z-10 flex h-full min-h-0 flex-1 flex-col p-0 cursor-pointer"
+        className="relative z-10 flex h-full min-h-0 flex-col cursor-pointer bg-transparent"
         onClick={handleManualPlay}
       >
         <audio 
@@ -38,36 +38,39 @@ export default function WatzullenwePage() {
           loop 
         />
 
-        <div className="flex h-full min-h-0 flex-1 flex-col pt-20 text-center">
+        {/* 
+          Force the content into the bottom 70% action safe-area.
+          We use ge-intro-inner as an optional backdrop if the main image fails to load,
+          ensuring the experience never looks like a "white blank page".
+        */}
+        <div className="action_container flex flex-col items-center justify-center p-6" style={{ height: '70cqh', maxHeight: '70cqh', marginTop: 'auto', backgroundColor: 'transparent' }}>
           
-          <div className="action_container min-h-0 flex-1 overflow-hidden" style={{ height: '70cqh', maxHeight: '70cqh', marginTop: 'auto' }}>
-            <div className="flex min-h-0 min-w-0 flex-1 flex-col gap-6 justify-center overflow-y-auto px-4">
-              <h1 className="ge-h1 text-white drop-shadow-[0_4px_12px_rgba(0,0,0,0.5)] text-5xl">We are the WINNERS !</h1>
-              
-              <div className="flex justify-center mt-4">
-                <button
-                  type="button"
-                  className="ge-btn-yellow scale-110 shadow-2xl"
-                  onClick={() => {
-                    // Placeholder for actual database logging logic if needed
-                    alert('Gegevens zijn vastgelegd!');
-                  }}
-                >
-                  Leg dit vast in de database
-                </button>
-              </div>
-              
-              <div className="ge-body flex flex-col gap-4 text-pretty font-bold text-white drop-shadow-[0_2px_8px_rgba(0,0,0,0.5)] text-xl mt-8">
-                <p>
-                  De missie zit erop! Tijd om te proosten op de goede afloop.
-                </p>
-                <p>
-                  Geniet van de overwinning!
-                </p>
-              </div>
+          <div className="flex flex-col gap-8 text-center items-center py-8">
+            <h1 className="ge-h1 text-white drop-shadow-[0_4px_12px_rgba(0,0,0,0.6)] text-5xl font-bold leading-tight">
+              We are the WINNERS !
+            </h1>
+            
+            <button
+              type="button"
+              className="ge-btn-yellow shadow-[0_10px_30px_rgba(0,0,0,0.3)] transform transition-transform active:scale-95"
+              style={{ padding: '16px 32px', fontSize: '1.1rem' }}
+              onClick={(e) => {
+                e.stopPropagation();
+                alert('Gegevens zijn vastgelegd in de database!');
+              }}
+            >
+              Leg dit vast in de database
+            </button>
+
+            <div className="ge-body flex flex-col gap-4 text-pretty font-medium text-white drop-shadow-[0_2px_8px_rgba(0,0,0,0.5)] text-lg opacity-90 pb-10">
+              <p>
+                De missie zit erop! Tijd om te proosten op de goede afloop.
+              </p>
+              <p>
+                Geniet van de overwinning!
+              </p>
             </div>
           </div>
-
         </div>
       </div>
     </PlayerChrome>
