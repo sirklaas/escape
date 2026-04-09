@@ -93,10 +93,10 @@ export default function IntroPage() {
                 <div className="flex shrink-0 justify-center">
                   <img
                     src="/EscapeLogobadge.png"
-                    alt=""
-                    width={196}
-                    height={189}
-                    className="h-[189px] w-[196px] object-contain drop-shadow-md"
+                    alt="Escape Room Logo"
+                    width={150}
+                    height={132}
+                    className="h-[132px] w-[150px] object-contain drop-shadow-md"
                   />
                 </div>
                 <div className="action_container min-h-0 flex-1 overflow-hidden pt-4">
