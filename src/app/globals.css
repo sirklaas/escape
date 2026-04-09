@@ -138,12 +138,7 @@ html, body {
  */
 .player-view .action_container {
   display: flex;
-  /* 70% of `.player-view` inner height; `margin-top: auto` anchors the block to the inner bottom */
-  flex: 0 0 auto;
-  height: 70cqh;
-  max-height: 70cqh;
-  margin-top: auto;
-  border: 1px solid black;
+  flex: 1 1 auto;
   flex-direction: column;
   min-height: 0;
   min-width: 0;

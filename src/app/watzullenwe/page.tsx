@@ -43,6 +43,7 @@ export default function WatzullenwePage() {
         */}
         <div 
           className="action_container flex flex-col items-center justify-center p-6 bg-transparent" 
+          style={{ height: '70cqh', maxHeight: '70cqh', marginTop: 'auto', border: '1px solid black' }}
         >
           
           <div className="flex flex-col gap-8 text-center items-center py-8">
