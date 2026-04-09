@@ -39,12 +39,9 @@ export default function ChallengeSelection() {
 
   return (
     <PlayerChrome backgroundImage="/Escapebackdrop.jpg">
-      <div className="h-[10%] w-full shrink-0" />
-      <div className="h-[20%] w-full shrink-0" />
       <div className="flex min-h-0 w-full flex-1 flex-col items-center justify-start pt-2 text-center">
-        <h2 className="text-3xl font-medium tracking-tight text-gray-800 drop-shadow-sm">Kies je uitdaging</h2>
-        <div className="h-14 w-full shrink-0" />
-        <div className="mx-auto w-[calc(100%-10px)] max-w-sm">
+        <h2 className="ge-h1">Kies je uitdaging</h2>
+        <div className="mx-auto w-[calc(100%-10px)] max-w-sm mt-8">
           <div className="grid grid-cols-3 gap-3">
             {LOCATIONS.map((loc) => {
               const isPlayed = playedLocations.includes(loc.slug);
