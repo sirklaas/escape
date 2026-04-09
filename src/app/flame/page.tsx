@@ -182,14 +182,15 @@ export default function FlamePage() {
       const newSlots = slots.map((s, i) => i === hitIdx ? { filledBy: id } : s);
       setSlots(newSlots);
 
-      // Duplicate needed? (E or R appear twice)
+      // Duplicate needed? (E or R appear twice in FLAMETHROWER)
+      // newSlots already contains this tile's filledBy, so .filter counts it — no +1 needed
       const neededCount = WORD_LETTERS.filter(l => l === tile.letter).length;
       const nowFilled = newSlots.filter(s => {
         const ft = tiles.find(t2 => t2.id === s.filledBy);
         return ft?.letter === tile.letter;
-      }).length + 1; // +1 for current
+      }).length;
       if (neededCount > nowFilled) {
-        setTimeout(() => spawnExtra(tile.letter), 250);
+        setTimeout(() => spawnExtra(tile.letter), 300);
       }
 
       // Win check
