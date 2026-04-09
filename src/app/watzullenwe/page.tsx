@@ -42,13 +42,7 @@ export default function WatzullenwePage() {
           Centered winners' zone within the 70cqh interactive region.
         */}
         <div 
-          className="action_container flex flex-col items-center justify-center p-6" 
-          style={{ 
-            height: '70cqh', 
-            maxHeight: '70cqh', 
-            marginTop: 'auto', 
-            backgroundColor: 'transparent' 
-          }}
+          className="action_container flex flex-col items-center justify-center p-6 bg-transparent" 
         >
           
           <div className="flex flex-col gap-8 text-center items-center py-8">

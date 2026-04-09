@@ -178,7 +178,7 @@ export default function TokenKeyPage() {
             />
           </div>
 
-          <div className="action_container min-h-0 flex-1 overflow-hidden pt-4" style={{ height: '70cqh', maxHeight: '70cqh', marginTop: 'auto' }}>
+          <div className="action_container min-h-0 flex-1 overflow-hidden pt-4">
             <div className="flex min-h-0 min-w-0 flex-1 flex-col gap-4 overflow-y-auto">
               <h1 className="ge-h1 text-white">Goed gedaan! 🎉</h1>
               <p className="ge-body text-white opacity-90">Nu nog de 12-letterige code kraken</p>
