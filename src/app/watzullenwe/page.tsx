@@ -22,7 +22,7 @@ export default function WatzullenwePage() {
   }, []);
 
   return (
-    <PlayerChrome backgroundImage="/Escapebackdrop.jpg" wrapWithActionContainer={false}>
+    <PlayerChrome backgroundImage="/purple.jpg" wrapWithActionContainer={false}>
       {/* 
         The background image is supplied by PhoneWrapper (wrapped by PlayerChrome).
         We ensure this container is transparent and fills the viewport.
