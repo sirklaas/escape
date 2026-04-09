@@ -784,3 +784,60 @@ html, body {
   font-weight: 600;
   color: #fde68a;
 }
+
+/* ─────────────────────────────────────────────────────────
+   Flame drag-and-drop puzzle (flame-*)
+   ───────────────────────────────────────────────────────── */
+
+/* A slot square in the answer row */
+.flame-slot {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 2px solid rgba(255, 255, 255, 0.45);
+  border-radius: 4px;
+  background: rgba(255, 255, 255, 0.08);
+  transition: background 0.2s ease, border-color 0.2s ease;
+}
+
+.flame-slot--filled {
+  background: rgba(59, 130, 246, 0.55);
+  border-color: #93c5fd;
+  box-shadow: 0 0 10px rgba(147, 197, 253, 0.4);
+}
+
+.flame-slot-letter {
+  font-family: 'Barlow Semi Condensed', sans-serif;
+  font-size: 1rem;
+  font-weight: 700;
+  color: #fff;
+  line-height: 1;
+  text-transform: uppercase;
+}
+
+/* Draggable letter tile */
+.flame-tile {
+  width: 56px;
+  height: 56px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 3px solid #fff;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.18);
+  color: #fff;
+  font-family: 'Barlow Semi Condensed', sans-serif;
+  font-size: 1.6rem;
+  font-weight: 700;
+  cursor: grab;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.35);
+  backdrop-filter: blur(4px);
+  transition: box-shadow 0.15s ease;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.flame-tile:active {
+  cursor: grabbing;
+  box-shadow: 0 8px 28px rgba(0, 0, 0, 0.5);
+  transform: scale(1.1);
+}

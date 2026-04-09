@@ -160,3 +160,53 @@ export async function updatePlayerNamesAction(teamName: string, playerNames: str
     return false;
   }
 }
+
+export async function markFlameWinnerAction(
+  teamName: string
+): Promise<{ success: boolean; rank: number | null }> {
+  if (isPocketBaseSkipped()) {
+    return { success: true, rank: 1 };
+  }
+
+  const pb = new PocketBase(PB_URL);
+  try {
+    // Fetch the team record
+    const record = await pb.collection('escape_game_data').getFirstListItem(
+      `team_name = "${teamName}"`,
+      { requestKey: null }
+    );
+    const gamedata =
+      typeof record.gamedata === 'string'
+        ? JSON.parse(record.gamedata)
+        : record.gamedata ?? {};
+
+    gamedata.flameCompleted = true;
+    gamedata.flameCompletedAt = Date.now();
+
+    await pb.collection('escape_game_data').update(record.id, {
+      gamedata: JSON.stringify(gamedata),
+    });
+
+    // Determine rank: how many teams have already completed flame before us?
+    const allRecords = await pb
+      .collection('escape_game_data')
+      .getFullList({ filter: PB_TEAM_ROWS_FILTER, requestKey: null });
+
+    const completedTimes = allRecords
+      .map((r) => {
+        const gd =
+          typeof r.gamedata === 'string' ? JSON.parse(r.gamedata) : r.gamedata ?? {};
+        return gd.flameCompleted ? (gd.flameCompletedAt as number) : null;
+      })
+      .filter((t): t is number => t !== null)
+      .sort((a, b) => a - b);
+
+    const rank =
+      completedTimes.indexOf(gamedata.flameCompletedAt as number) + 1 || 1;
+
+    return { success: true, rank };
+  } catch (err) {
+    console.error('markFlameWinnerAction failed:', err);
+    return { success: false, rank: null };
+  }
+}
