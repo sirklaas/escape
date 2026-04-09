@@ -158,8 +158,6 @@ html, body {
   overflow-y: auto;
   -webkit-overflow-scrolling: touch;
   padding-bottom: 0;
-  border: 2px solid #000;
-  border-radius: 0;
 }
 
 /* Tight vertical rhythm (e.g. location %‑height stacks) — overrides default action gap */

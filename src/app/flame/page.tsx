@@ -1,368 +1,352 @@
 'use client';
 
 import { useState, useEffect, useRef, useCallback } from 'react';
+import PlayerChrome from '@/components/PlayerChrome';
 import { markFlameWinnerAction } from '@/app/actions';
 
-// ── Word & letters ──────────────────────────────────────────────────────────
-const TARGET_WORD = 'FLAMETHROWER'; // 12 letters
-const WORD_LETTERS = TARGET_WORD.split('');
+// ── Word definition ───────────────────────────────────────────────────────────
+// FLAMETHROWER split into two visual rows
+const ROW1 = 'FLAME'.split('');    // indices 0-4
+const ROW2 = 'THROWER'.split(''); // indices 5-11
+const WORD_LETTERS = [...ROW1, ...ROW2]; // 12 letters total
 
-// The 10 unique letter tokens from tokenkey
+// 10 unique token letters from tokenkey
 const TOKEN_LETTERS = ['F', 'L', 'A', 'M', 'E', 'T', 'H', 'R', 'O', 'W'];
+
+const TILE_SIZE = 52;
 
 function playSound(src: string) {
   try { new Audio(src).play().catch(() => {}); } catch {}
 }
 
-// Random position within safe screen bounds (avoids the slot row)
-function randomPos(w: number, h: number) {
-  const TILE = 56;
-  const SLOT_AREA_BOTTOM = Math.min(h * 0.45, 280); // keep tiles below slot row
+// ── Random position in the "field" area (below the slot rows) ────────────────
+function randomPos(fieldW: number, fieldH: number) {
   return {
-    x: Math.random() * (w - TILE - 20) + 10,
-    y: SLOT_AREA_BOTTOM + Math.random() * (h - SLOT_AREA_BOTTOM - TILE - 60),
+    x: Math.random() * Math.max(fieldW - TILE_SIZE - 8, 1) + 4,
+    y: Math.random() * Math.max(fieldH - TILE_SIZE - 8, 1) + 4,
   };
 }
 
-interface Tile {
-  id: number;
-  letter: string;
-  x: number;
-  y: number;
-  fixed: boolean; // once placed correctly, stops being draggable
-}
-
-interface SlotState {
-  filledBy: number | null; // tile id that filled this slot
-}
-
-type GamePhase = 'playing' | 'won';
+interface Tile { id: number; letter: string; x: number; y: number; }
+interface Slot { filledBy: number | null; }
 
 export default function FlamePage() {
-  const screenRef = useRef<HTMLDivElement>(null);
-  const [dims, setDims] = useState({ w: 335, h: 700 });
+  const fieldRef = useRef<HTMLDivElement>(null);
+  const [fieldDims, setFieldDims] = useState({ w: 295, h: 400 });
   const [tiles, setTiles] = useState<Tile[]>([]);
-  const [slots, setSlots] = useState<SlotState[]>(() => WORD_LETTERS.map(() => ({ filledBy: null })));
-  const [phase, setPhase] = useState<GamePhase>('playing');
+  const [slots, setSlots] = useState<Slot[]>(() => WORD_LETTERS.map(() => ({ filledBy: null })));
+  const [fixed, setFixed] = useState<Set<number>>(() => new Set());  // tile ids locked in slots
+  const [teamName, setTeamName] = useState('Jullie team');
   const [showWinPopup, setShowWinPopup] = useState(false);
-  const [playingVideo, setPlayingVideo] = useState(false);
-  const [teamName, setTeamName] = useState('');
   const [winRank, setWinRank] = useState<number | null>(null);
+  const [playingVideo, setPlayingVideo] = useState(false);
 
-  const nextTileId = useRef(0);
-  const dragState = useRef<{
-    tileId: number;
-    startX: number; startY: number;
-    ox: number; oy: number; // offset from pointer to tile origin
-  } | null>(null);
+  const nextId = useRef(0);
+  const drag = useRef<{ id: number; ox: number; oy: number } | null>(null);
 
-  // ── Init dims & tiles ────────────────────────────────────────────────────
+  // ── Read team name ────────────────────────────────────────────────────────
   useEffect(() => {
     setTeamName(localStorage.getItem('escaperoomTeamName') ?? 'Jullie team');
+  }, []);
 
+  // ── Measure field and spawn initial tiles ────────────────────────────────
+  useEffect(() => {
     function measure() {
-      if (!screenRef.current) return;
-      const r = screenRef.current.getBoundingClientRect();
-      setDims({ w: r.width, h: r.height });
+      if (!fieldRef.current) return;
+      const r = fieldRef.current.getBoundingClientRect();
+      if (r.width > 50) setFieldDims({ w: r.width, h: r.height });
     }
     measure();
-    window.addEventListener('resize', measure);
-    return () => window.removeEventListener('resize', measure);
+    const ro = new ResizeObserver(measure);
+    if (fieldRef.current) ro.observe(fieldRef.current);
+    return () => ro.disconnect();
   }, []);
 
-  // Spawn initial 10 tiles once dims are real
+  // Spawn once per field width
+  const spawned = useRef(false);
   useEffect(() => {
-    if (dims.w < 100) return;
-    const initial: Tile[] = TOKEN_LETTERS.map((letter) => {
-      const pos = randomPos(dims.w, dims.h);
-      return { id: nextTileId.current++, letter, x: pos.x, y: pos.y, fixed: false };
-    });
-    setTiles(initial);
-  }, [dims.w]); // only once when width is known
+    if (spawned.current || fieldDims.w < 50) return;
+    spawned.current = true;
+    setTiles(
+      TOKEN_LETTERS.map(letter => {
+        const pos = randomPos(fieldDims.w, fieldDims.h);
+        return { id: nextId.current++, letter, x: pos.x, y: pos.y };
+      })
+    );
+  }, [fieldDims.w]);
 
-  // ── Spawn a duplicate tile at random position ────────────────────────────
-  const spawnDuplicate = useCallback((letter: string) => {
-    const pos = randomPos(dims.w, dims.h);
-    setTiles(prev => [...prev, { id: nextTileId.current++, letter, x: pos.x, y: pos.y, fixed: false }]);
-  }, [dims]);
+  // ── Reset all — called on wrong drop ─────────────────────────────────────
+  const resetAll = useCallback(() => {
+    playSound('/sounds/wrong.mp3');
+    setFixed(new Set());
+    setSlots(WORD_LETTERS.map(() => ({ filledBy: null })));
+    // Return every non-fixed tile to a new random position
+    // rebuild from the unique TOKEN_LETTERS (remove duplicates spawned for E/R)
+    setTiles(
+      TOKEN_LETTERS.map(letter => {
+        const pos = randomPos(fieldDims.w, fieldDims.h);
+        return { id: nextId.current++, letter, x: pos.x, y: pos.y };
+      })
+    );
+  }, [fieldDims]);
 
-  // ── Check win condition ──────────────────────────────────────────────────
-  const checkWin = useCallback((currentSlots: SlotState[], currentTiles: Tile[]) => {
-    const allFilled = currentSlots.every(s => s.filledBy !== null);
-    if (!allFilled) return;
+  // ── Spawn duplicate tile for letters that appear twice in the word ────────
+  const spawnExtra = useCallback((letter: string) => {
+    const pos = randomPos(fieldDims.w, fieldDims.h);
+    setTiles(prev => [...prev, { id: nextId.current++, letter, x: pos.x, y: pos.y }]);
+  }, [fieldDims]);
 
-    // Verify letters match FLAMETHROWER
-    const allCorrect = currentSlots.every((s, i) => {
-      const tile = currentTiles.find(t => t.id === s.filledBy);
-      return tile?.letter === WORD_LETTERS[i];
-    });
+  // ── Slot geometry: each row is centered independently ────────────────────
+  // Slot row rendered as flexbox in JSX — hit-test reads DOM rects
+  const slotsRef = useRef<(HTMLDivElement | null)[]>([]);
 
-    if (allCorrect) {
-      setPhase('won');
-      // Mark winner in PB + get rank
-      const stored = localStorage.getItem('escaperoomTeamName') ?? '';
-      markFlameWinnerAction(stored).then(res => {
-        setWinRank(res.rank ?? null);
-        setShowWinPopup(true);
-      });
-    }
-  }, []);
-
-  // ── Slot hit-test ────────────────────────────────────────────────────────
-  // Returns slot index if tile center is within a slot region, else -1
-  function getHitSlot(tileX: number, tileY: number): number {
-    const TILE = 56;
-    const slotCount = WORD_LETTERS.length;
-    const slotW = Math.min(Math.floor((dims.w - 16) / slotCount), 30);
-    const totalW = slotW * slotCount + (slotCount - 1) * 2;
-    const startX = (dims.w - totalW) / 2;
-    const slotY = 40; // top offset inside screen
-    const cx = tileX + TILE / 2;
-    const cy = tileY + TILE / 2;
-
-    for (let i = 0; i < slotCount; i++) {
-      const sx = startX + i * (slotW + 2);
-      const sy = slotY;
-      const tolerance = 24;
+  function getHitSlot(cx: number, cy: number): number {
+    // cx/cy are relative to fieldRef
+    const fieldRect = fieldRef.current?.getBoundingClientRect();
+    if (!fieldRect) return -1;
+    for (let i = 0; i < WORD_LETTERS.length; i++) {
+      const el = slotsRef.current[i];
+      if (!el) continue;
+      const r = el.getBoundingClientRect();
+      // Convert to field-relative coords
+      const sx = r.left - fieldRect.left;
+      const sy = r.top - fieldRect.top;
+      const PAD = 16;
       if (
-        cx >= sx - tolerance && cx <= sx + slotW + tolerance &&
-        cy >= sy - tolerance && cy <= sy + slotW + tolerance
-      ) {
-        return i;
-      }
+        cx >= sx - PAD && cx <= sx + r.width + PAD &&
+        cy >= sy - PAD && cy <= sy + r.height + PAD
+      ) return i;
     }
     return -1;
   }
 
-  // ── Pointer drag handlers ─────────────────────────────────────────────────
-  const handlePointerDown = useCallback((e: React.PointerEvent, tileId: number) => {
-    const tile = tiles.find(t => t.id === tileId);
-    if (!tile || tile.fixed) return;
-    e.currentTarget.setPointerCapture(e.pointerId);
-    const rect = screenRef.current!.getBoundingClientRect();
-    dragState.current = {
-      tileId,
-      startX: tile.x,
-      startY: tile.y,
-      ox: (e.clientX - rect.left) - tile.x,
-      oy: (e.clientY - rect.top) - tile.y,
+  // ── Pointer handlers ──────────────────────────────────────────────────────
+  const onTileDown = useCallback((e: React.PointerEvent, id: number) => {
+    if (fixed.has(id)) return;
+    e.preventDefault();
+    (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId);
+    const el = e.currentTarget as HTMLElement;
+    const fieldRect = fieldRef.current!.getBoundingClientRect();
+    drag.current = {
+      id,
+      ox: e.clientX - fieldRect.left - parseFloat(el.style.left || '0'),
+      oy: e.clientY - fieldRect.top  - parseFloat(el.style.top  || '0'),
     };
-  }, [tiles]);
+  }, [fixed]);
 
-  const handlePointerMove = useCallback((e: React.PointerEvent) => {
-    if (!dragState.current || !screenRef.current) return;
-    const rect = screenRef.current.getBoundingClientRect();
-    const x = (e.clientX - rect.left) - dragState.current.ox;
-    const y = (e.clientY - rect.top) - dragState.current.oy;
-    setTiles(prev => prev.map(t => t.id === dragState.current!.tileId ? { ...t, x, y } : t));
+  const onFieldMove = useCallback((e: React.PointerEvent) => {
+    if (!drag.current) return;
+    const fieldRect = fieldRef.current!.getBoundingClientRect();
+    const x = e.clientX - fieldRect.left - drag.current.ox;
+    const y = e.clientY - fieldRect.top  - drag.current.oy;
+    const { id } = drag.current;
+    setTiles(prev => prev.map(t => t.id === id ? { ...t, x, y } : t));
   }, []);
 
-  const handlePointerUp = useCallback((e: React.PointerEvent, tileId: number) => {
-    if (!dragState.current || dragState.current.tileId !== tileId) return;
-    const ds = dragState.current;
-    dragState.current = null;
+  const onTileUp = useCallback((e: React.PointerEvent, id: number) => {
+    if (!drag.current || drag.current.id !== id) return;
+    drag.current = null;
 
-    setTiles(prevTiles => {
-      setSlots(prevSlots => {
-        const tile = prevTiles.find(t => t.id === tileId)!;
-        const hitIndex = getHitSlot(tile.x, tile.y);
+    const tile = tiles.find(t => t.id === id);
+    if (!tile) return;
 
-        if (hitIndex === -1) {
-          // Didn't hit any slot — bounce back to start pos
-          playSound('/sounds/wrong.mp3');
-          setTiles(p => p.map(t => t.id === tileId ? { ...t, x: ds.startX, y: ds.startY } : t));
-          return prevSlots;
-        }
+    const fieldRect = fieldRef.current!.getBoundingClientRect();
+    // center of tile in field coords
+    const cx = tile.x + TILE_SIZE / 2;
+    const cy = tile.y + TILE_SIZE / 2;
+    const hitIdx = getHitSlot(cx, cy);
 
-        const expectedLetter = WORD_LETTERS[hitIndex];
-        const slotAlreadyFilled = prevSlots[hitIndex].filledBy !== null;
+    if (hitIdx === -1) {
+      // Missed all slots — just stays where dropped, no penalty
+      return;
+    }
 
-        if (tile.letter === expectedLetter && !slotAlreadyFilled) {
-          // ✅ Correct!
-          playSound('/sounds/right.mp3');
+    const expected = WORD_LETTERS[hitIdx];
+    const alreadyFilled = slots[hitIdx].filledBy !== null;
 
-          const newSlots = prevSlots.map((s, i) =>
-            i === hitIndex ? { ...s, filledBy: tileId } : s
-          );
+    if (tile.letter === expected && !alreadyFilled) {
+      // ✅ Correct
+      playSound('/sounds/right.mp3');
 
-          // Snap tile to exact slot position
-          const slotCount = WORD_LETTERS.length;
-          const slotW = Math.min(Math.floor((dims.w - 16) / slotCount), 30);
-          const totalW = slotW * slotCount + (slotCount - 1) * 2;
-          const startX = (dims.w - totalW) / 2;
-          const slotX = startX + hitIndex * (slotW + 2);
+      // Snap tile to slot position
+      const slotEl = slotsRef.current[hitIdx];
+      if (slotEl) {
+        const sr = slotEl.getBoundingClientRect();
+        const fr = fieldRef.current!.getBoundingClientRect();
+        const snapX = sr.left - fr.left + (sr.width - TILE_SIZE) / 2;
+        const snapY = sr.top  - fr.top  + (sr.height - TILE_SIZE) / 2;
+        setTiles(prev => prev.map(t => t.id === id ? { ...t, x: snapX, y: snapY } : t));
+      }
 
-          const newTiles = prevTiles.map(t =>
-            t.id === tileId ? { ...t, x: slotX, y: 40, fixed: true } : t
-          );
+      setFixed(prev => new Set(prev).add(id));
+      const newSlots = slots.map((s, i) => i === hitIdx ? { filledBy: id } : s);
+      setSlots(newSlots);
 
-          // If this letter appears again in TARGET_WORD and all instances aren't filled yet → spawn duplicate
-          const neededCount = WORD_LETTERS.filter(l => l === tile.letter).length;
-          const filledCount = newSlots.filter(s => {
-            const ft = newTiles.find(t2 => t2.id === s.filledBy);
-            return ft?.letter === tile.letter;
-          }).length;
+      // Duplicate needed? (E or R appear twice)
+      const neededCount = WORD_LETTERS.filter(l => l === tile.letter).length;
+      const nowFilled = newSlots.filter(s => {
+        const ft = tiles.find(t2 => t2.id === s.filledBy);
+        return ft?.letter === tile.letter;
+      }).length + 1; // +1 for current
+      if (neededCount > nowFilled) {
+        setTimeout(() => spawnExtra(tile.letter), 250);
+      }
 
-          if (neededCount > filledCount) {
-            setTimeout(() => spawnDuplicate(tile.letter), 200);
-          }
+      // Win check
+      const allFilled = newSlots.every(s => s.filledBy !== null);
+      if (allFilled) {
+        playSound('/sounds/right.mp3');
+        const stored = localStorage.getItem('escaperoomTeamName') ?? '';
+        markFlameWinnerAction(stored).then(res => {
+          setWinRank(res.rank ?? null);
+          setShowWinPopup(true);
+        });
+      }
+    } else {
+      // ❌ Wrong slot or already filled → reset everything
+      resetAll();
+    }
+  }, [tiles, slots, fixed, spawnExtra, resetAll]);
 
-          // Sync tiles then check win
-          setTimeout(() => {
-            setTiles(newTiles);
-            checkWin(newSlots, newTiles);
-          }, 0);
-
-          return newSlots;
-        } else {
-          // ❌ Wrong slot or already filled
-          playSound('/sounds/wrong.mp3');
-          setTiles(p => p.map(t => t.id === tileId ? { ...t, x: ds.startX, y: ds.startY } : t));
-          return prevSlots;
-        }
-      });
-      return prevTiles;
-    });
-  }, [dims, spawnDuplicate, checkWin]);
-
-  // ── Slot geometry helpers ────────────────────────────────────────────────
-  const slotCount = WORD_LETTERS.length;
-  const slotW = Math.min(Math.floor((dims.w - 16) / slotCount), 30);
-  const totalW = slotW * slotCount + (slotCount - 1) * 2;
-  const slotStartX = (dims.w - totalW) / 2;
-
-  // ── Winner popup OK → play video ─────────────────────────────────────────
+  // ── Winner → video ────────────────────────────────────────────────────────
   const handleWinOk = () => {
     setShowWinPopup(false);
     setTimeout(() => setPlayingVideo(true), 300);
   };
 
-  // ── Render ───────────────────────────────────────────────────────────────
+  const filledCount = slots.filter(s => s.filledBy !== null).length;
+
+  // ── Render ────────────────────────────────────────────────────────────────
   return (
-    <div className="tk-outer">
-      <div className="tk-card">
-        <div
-          className="tk-inner"
-          style={{
-            backgroundImage: 'url(/purple.jpg)',
-            backgroundSize: 'cover',
-            backgroundPosition: 'center',
-          }}
-        >
-          {/* Full-screen video finale */}
-          {playingVideo && (
-            <div className="absolute inset-0 z-50 bg-black flex flex-col items-center justify-center">
-              <video
-                autoPlay
-                playsInline
-                // NOT muted — as requested
-                className="h-full w-full object-cover"
-                onEnded={() => { window.location.href = '/watzullenwe'; }}
-              >
-                <source src="/videos/watzullenwe.mp4" type="video/mp4" />
-              </video>
-            </div>
-          )}
+    <PlayerChrome backgroundImage="/purple.jpg" wrapWithActionContainer={false}>
 
-          {/* Game screen */}
-          <div
-            ref={screenRef}
-            className="relative flex flex-col"
-            style={{ width: '100%', height: '100%', overflow: 'hidden' }}
-            onPointerMove={handlePointerMove}
+      {/* Full-screen video finale */}
+      {playingVideo && (
+        <div className="absolute inset-0 z-50 bg-black">
+          <video
+            autoPlay
+            playsInline
+            className="h-full w-full object-cover"
+            onEnded={() => { window.location.href = '/watzullenwe'; }}
           >
-            {/* ── Dark overlay with heading ── */}
-            <div className="absolute inset-0 bg-black/45 pointer-events-none z-0" />
+            <source src="/videos/watzullenwe.mp4" type="video/mp4" />
+          </video>
+        </div>
+      )}
 
-            {/* Heading row */}
-            <div className="relative z-10 text-center pt-3 pb-1 px-2 pointer-events-none flex-shrink-0">
-              <p className="tk-progress-label" style={{ fontSize: '0.75rem' }}>
-                Sleep de letters op de juiste plek
-              </p>
-            </div>
+      <div className="player-view relative flex flex-col h-full w-full min-h-0">
 
-            {/* ── SLOT ROW ── */}
-            <div
-              className="relative z-10 flex-shrink-0"
-              style={{ height: 56, marginTop: 4 }}
-            >
-              {WORD_LETTERS.map((letter, i) => {
-                const sx = slotStartX + i * (slotW + 2);
-                const filled = slots[i].filledBy !== null;
+        {/* ── HEADING ── */}
+        <div className="relative z-10 text-center pt-4 pb-2 px-4 flex-shrink-0 bg-black/40">
+          <h1 className="tk-h1" style={{ fontSize: '1.25rem' }}>Sleep de letters op de juiste plek</h1>
+          {/* Progress bar */}
+          <div className="tk-progress-bar-wrap mt-2">
+            <div className="tk-progress-bar-fill" style={{ width: `${(filledCount / WORD_LETTERS.length) * 100}%` }} />
+          </div>
+          <p className="tk-progress-label mt-1">{filledCount} / {WORD_LETTERS.length}</p>
+        </div>
+
+        {/* ── SLOT ROWS (action_container) ─────────────────────────────────── */}
+        <div className="action_container relative z-10 flex-shrink-0" style={{ height: 'auto', maxHeight: 'none', marginTop: 0, flex: '0 0 auto' }}>
+          <div className="flex flex-col gap-2 w-full items-center py-3">
+
+            {/* Row 1: FLAME */}
+            <div className="flex gap-[5px] justify-center">
+              {ROW1.map((letter, i) => {
+                const slotIdx = i; // 0-4
+                const filled = slots[slotIdx].filledBy !== null;
                 return (
                   <div
-                    key={i}
-                    style={{
-                      position: 'absolute',
-                      left: sx,
-                      top: 0,
-                      width: slotW,
-                      height: slotW,
-                    }}
+                    key={`r1-${i}`}
+                    ref={el => { slotsRef.current[slotIdx] = el; }}
                     className={`flame-slot ${filled ? 'flame-slot--filled' : ''}`}
+                    style={{ width: 46, height: 46 }}
                   >
-                    {filled && (
-                      <span className="flame-slot-letter">
-                        {letter}
-                      </span>
-                    )}
+                    {filled && <span className="flame-slot-letter">{letter}</span>}
                   </div>
                 );
               })}
             </div>
 
-            {/* Progress */}
-            <div className="relative z-10 flex-shrink-0 px-3 mt-1">
-              <div className="tk-progress-bar-wrap">
-                <div
-                  className="tk-progress-bar-fill"
-                  style={{ width: `${(slots.filter(s => s.filledBy !== null).length / slotCount) * 100}%` }}
-                />
-              </div>
+            {/* Divider */}
+            <div className="flex items-center gap-2 w-full px-6">
+              <div className="flex-1 h-px bg-white/30" />
+              <span className="tk-progress-label text-white/60 text-xs">—</span>
+              <div className="flex-1 h-px bg-white/30" />
             </div>
 
-            {/* ── DRAGGABLE TILES ── */}
-            {tiles.filter(t => !t.fixed).map(tile => (
-              <div
-                key={tile.id}
-                className="flame-tile"
-                style={{
-                  position: 'absolute',
-                  left: tile.x,
-                  top: tile.y,
-                  zIndex: 20,
-                  touchAction: 'none',
-                  userSelect: 'none',
-                }}
-                onPointerDown={e => handlePointerDown(e, tile.id)}
-                onPointerUp={e => handlePointerUp(e, tile.id)}
-              >
-                {tile.letter}
-              </div>
-            ))}
+            {/* Row 2: THROWER */}
+            <div className="flex gap-[5px] justify-center">
+              {ROW2.map((letter, i) => {
+                const slotIdx = ROW1.length + i; // 5-11
+                const filled = slots[slotIdx].filledBy !== null;
+                return (
+                  <div
+                    key={`r2-${i}`}
+                    ref={el => { slotsRef.current[slotIdx] = el; }}
+                    className={`flame-slot ${filled ? 'flame-slot--filled' : ''}`}
+                    style={{ width: 46, height: 46 }}
+                  >
+                    {filled && <span className="flame-slot-letter">{letter}</span>}
+                  </div>
+                );
+              })}
+            </div>
+
           </div>
-
-          {/* ── WIN POPUP ── */}
-          {showWinPopup && (
-            <div className="absolute inset-0 z-40 flex items-center justify-center bg-black/60">
-              <div className="ge-popup-yellow player-view" style={{ maxWidth: 280, margin: 'auto' }}>
-                <p className="ge-popup__title">Jullie zijn de winnaar! 🏆</p>
-                {winRank && (
-                  <p className="ge-popup__meta">
-                    {winRank === 1 ? '🥇 Eerste plek!' : winRank === 2 ? '🥈 Tweede plek!' : `🥉 Plek ${winRank}`}
-                  </p>
-                )}
-                <p className="ge-popup__message mt-2">
-                  {teamName} heeft FLAMETHROWER gekraakt!
-                </p>
-                <button className="ge-popup__ok" onClick={handleWinOk}>
-                  OK
-                </button>
-              </div>
-            </div>
-          )}
         </div>
+
+        {/* ── DRAG FIELD (letters float here) ──────────────────────────────── */}
+        <div
+          ref={fieldRef}
+          className="relative flex-1 min-h-0 z-10"
+          style={{ touchAction: 'none' }}
+          onPointerMove={onFieldMove}
+        >
+          {tiles.map(tile => (
+            <div
+              key={tile.id}
+              className="flame-tile"
+              style={{
+                position: 'absolute',
+                left: tile.x,
+                top: tile.y,
+                width: TILE_SIZE,
+                height: TILE_SIZE,
+                zIndex: fixed.has(tile.id) ? 5 : 20,
+                touchAction: 'none',
+                userSelect: 'none',
+                opacity: fixed.has(tile.id) ? 0 : 1, // hide fixed tile in field (shown in slot)
+                pointerEvents: fixed.has(tile.id) ? 'none' : 'auto',
+              }}
+              onPointerDown={e => onTileDown(e, tile.id)}
+              onPointerUp={e => onTileUp(e, tile.id)}
+            >
+              {tile.letter}
+            </div>
+          ))}
+        </div>
+
       </div>
-    </div>
+
+      {/* ── WIN POPUP ── */}
+      {showWinPopup && (
+        <div className="absolute inset-0 z-40 flex items-center justify-center bg-black/65">
+          <div className="player-view ge-popup-yellow" style={{ maxWidth: 280, margin: 'auto' }}>
+            <p className="ge-popup__title">Jullie zijn de winnaar! 🏆</p>
+            {winRank && (
+              <p className="ge-popup__meta">
+                {winRank === 1 ? '🥇 Eerste plek!' : winRank === 2 ? '🥈 Tweede plek!' : `🥉 Plek ${winRank}`}
+              </p>
+            )}
+            <p className="ge-popup__message mt-2">
+              {teamName} heeft FLAMETHROWER gekraakt!
+            </p>
+            <button className="ge-popup__ok" onClick={handleWinOk}>OK</button>
+          </div>
+        </div>
+      )}
+
+    </PlayerChrome>
   );
 }
