@@ -539,17 +539,17 @@ export default function DashboardPage() {
         const res = await fetch(`/api/dashboard/session?id=${sessionData.id}`);
         const sessionData2 = await res.json();
         console.log('New game config loaded:', sessionData2);
-        if (sessionData2?.masterdasboard) {
+          if (sessionData2?.masterdasboard) {
           const normalized = normalizeGamedata(sessionData2.masterdasboard);
           console.log('Normalized new game data:', normalized);
           if (normalized) {
             setData(normalized);
             showStatus(`✅ Nieuwe game gestart in ${newSession.city} (${newSession.activeVariant})! Config geladen.`, 'success');
           } else {
-            showStatus(`⚠️ Game aangemaakt maar config format is ongeldig`, 'warning');
+            showStatus(`⚠️ Game aangemaakt maar config format is ongeldig`, 'error');
           }
         } else {
-          showStatus(`⚠️ Game aangemaakt maar geen config gevonden`, 'warning');
+          showStatus(`⚠️ Game aangemaakt maar geen config gevonden`, 'error');
         }
       } catch (err) {
         console.error('Failed to load new game config:', err);
