@@ -553,7 +553,7 @@ export default function DashboardPage() {
         }
       } catch (err) {
         console.error('Failed to load new game config:', err);
-        showStatus(`⚠️ Game aangemaakt maar config laden mislukt`, 'warning');
+        showStatus(`⚠️ Game aangemaakt maar config laden mislukt`, 'error');
       }
     } catch (err: any) {
       // PB is required - show error and re-throw so popup knows it failed
