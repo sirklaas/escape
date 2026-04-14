@@ -135,33 +135,38 @@ export async function POST(req: NextRequest) {
       // Ensure we have a valid timestamp for the unique team_name ID
       const timestamp = date ? new Date(date).getTime() : Date.now();
       
-      // Copy master config from the most recent game with the same variant
-      let masterConfig = null;
-      try {
-        const sameVariantGames = await pb.collection('escape_game_data').getList(1, 1, {
-          filter: `variant = "${variant}"`,
-          sort: '-created',
-          requestKey: null
-        });
-        if (sameVariantGames.items.length > 0) {
-          masterConfig = sameVariantGames.items[0].masterdasboard || null;
-        }
-      } catch {
-        // No games with this variant found
-      }
+      const newPriority = priority ?? 1;
       
-      // If no same-variant game found, fall back to priority=1 game
-      if (!masterConfig) {
+      // STEP 1: Get config from priority=1 game BEFORE demoting (this is the active game config)
+      let masterConfig = null;
+      if (newPriority === 1) {
         try {
           const priorityOne = await pb.collection('escape_game_data').getFirstListItem('priority=1', { requestKey: null });
           masterConfig = priorityOne.masterdasboard || null;
+          console.log('[API] Got config from priority=1 game:', !!masterConfig);
         } catch {
-          // No priority=1 game either
+          console.log('[API] No priority=1 game found');
         }
       }
       
-      // If new game has priority=1, demote existing priority=1 games to 0
-      const newPriority = priority ?? 1;
+      // STEP 2: If no config from priority=1, try same-variant game
+      if (!masterConfig) {
+        try {
+          const sameVariantGames = await pb.collection('escape_game_data').getList(1, 1, {
+            filter: `variant = "${variant}" && masterdasboard != null`,
+            sort: '-created',
+            requestKey: null
+          });
+          if (sameVariantGames.items.length > 0) {
+            masterConfig = sameVariantGames.items[0].masterdasboard || null;
+            console.log('[API] Got config from same-variant game:', !!masterConfig);
+          }
+        } catch {
+          console.log('[API] No same-variant game with config found');
+        }
+      }
+      
+      // STEP 3: Demote existing priority=1 games AFTER we got their config
       if (newPriority === 1) {
         try {
           const existingPriorityOne = await pb.collection('escape_game_data').getFullList({
@@ -171,8 +176,9 @@ export async function POST(req: NextRequest) {
           for (const game of existingPriorityOne) {
             await pb.collection('escape_game_data').update(game.id, { priority: 0 });
           }
+          console.log('[API] Demoted', existingPriorityOne.length, 'existing priority=1 games');
         } catch {
-          // No existing priority=1 games
+          console.log('[API] No existing priority=1 games to demote');
         }
       }
       
@@ -190,7 +196,7 @@ export async function POST(req: NextRequest) {
         masterdasboard: masterConfig, // Copy master config from same-variant game
       };
       
-      console.log('[API] Creating record with data:', { city: data.city, variant: data.variant, priority: data.priority, hasMasterConfig: !!masterConfig });
+      console.log('[API] Creating record:', { city: data.city, variant: data.variant, priority: data.priority, hasMasterConfig: !!data.masterdasboard });
       const record = await pb.collection('escape_game_data').create(data);
       console.log('[API] Record created successfully:', record.id);
       return NextResponse.json({ 
