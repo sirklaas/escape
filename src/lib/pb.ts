@@ -58,6 +58,7 @@ export interface EscapeLocation {
   startUrl: string;
   skip?: boolean;
   mapUrl?: string;
+  plusCode?: string;  // Google Plus Code (open location code) e.g., "9F4W9C8C+W4"
   verificationAnswer?: string;
 }
 
@@ -84,7 +85,7 @@ function isGameVariant(v: unknown): v is GameVariant {
  * `{ locations, pages }` shape like `public/escapedata.json` instead of nested
  * `{ city: { locations, pages }, ... }` — both must load or every location shows “Not Found”.
  */
-function normalizeGamedata(raw: unknown): EscapeData | null {
+export function normalizeGamedata(raw: unknown): EscapeData | null {
   if (raw == null) return null;
   let data: unknown = raw;
   if (typeof data === 'string') {
@@ -117,14 +118,17 @@ function normalizeGamedata(raw: unknown): EscapeData | null {
 
   if (Array.isArray(o.locations) && Array.isArray(o.pages)) {
     const activeVariant = isGameVariant(o.activeVariant) ? o.activeVariant : 'city';
+    const variantData: VariantData = {
+      locations: o.locations as EscapeLocation[],
+      pages: o.pages as EscapePage[],
+    };
+    // Populate all variants with the same data for now
+    // (each game has one master config shared across variants in PB)
     return {
       activeVariant,
-      city: {
-        locations: o.locations as EscapeLocation[],
-        pages: o.pages as EscapePage[],
-      },
-      diner: EMPTY_VARIANT,
-      rat: EMPTY_VARIANT,
+      city: variantData,
+      diner: variantData,
+      rat: variantData,
     };
   }
 
@@ -151,56 +155,61 @@ async function fetchEscapeDataFromPublicJson(): Promise<EscapeData | null> {
 
 /**
  * Game data: bundled `escapedata.json` first, then PocketBase when enabled and reachable.
+ * Reads from the priority=1 game's masterdasboard field.
  * (`public/escapedata.json` is still fetched optionally if you replace it at runtime.)
  */
 export async function fetchEscapeData(): Promise<EscapeData | null> {
   const bundled = getBundledEscapeData();
-  if (isPocketBaseSkipped()) {
-    return bundled ?? (await fetchEscapeDataFromPublicJson());
-  }
-
+  
   try {
     const pb = getPB();
-    const record = await pb.collection('escape_game_data').getFirstListItem('team_name="MASTER_DASHBOARD"', { requestKey: null });
-    const remote = normalizeGamedata(record.gamedata);
+    // Get the priority=1 game (active game) and read masterdasboard
+    const record = await pb.collection('escape_game_data').getFirstListItem('priority=1', { requestKey: null });
+    console.log('Priority=1 game record:', record);
+    const remote = normalizeGamedata(record.masterdasboard);
+    console.log('Normalized masterdasboard data:', remote);
     if (remote) return remote;
-  } catch (err) {
-    console.error('PB Fetch Failed:', err);
+  } catch (err: any) {
+    console.error('PB Fetch Failed:', err.message);
   }
 
+  console.log('Falling back to bundled data');
   return bundled ?? (await fetchEscapeDataFromPublicJson());
 }
 
 /**
- * Saves the entire EscapeData to the singleton record.
+ * Saves the entire EscapeData to a specific game's masterdasboard field.
+ * If no sessionId provided, saves to priority=1 game.
  */
-export async function saveEscapeData(data: EscapeData): Promise<boolean> {
+export async function saveEscapeData(data: EscapeData, sessionId?: string): Promise<boolean> {
   if (isPocketBaseSkipped()) {
     console.warn('[escape] saveEscapeData: PocketBase skipped (design mode)');
     return false;
   }
 
-  const pb = getPB();
-  const payload = {
-    team_name: "MASTER_DASHBOARD",
-    gamedata: JSON.stringify(data),
-    nr_teams: 1, // dummy value
-    city: "all", // dummy value
-    total_time: Date.now()
-  };
+  if (!sessionId) {
+    throw new Error('No session selected - select a game first');
+  }
 
   try {
-    const existing = await pb.collection('escape_game_data').getFirstListItem('team_name="MASTER_DASHBOARD"');
-    await pb.collection('escape_game_data').update(existing.id, payload);
-    return true;
-  } catch {
-    try {
-      await pb.collection('escape_game_data').create(payload);
-      return true;
-    } catch (createErr) {
-      console.error('PB Save Failed:', createErr);
-      return false;
+    // Use server-side API route to save (handles admin auth securely)
+    const res = await fetch('/api/dashboard/save', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ sessionId, data }),
+    });
+
+    const result = await res.json();
+
+    if (!res.ok || !result.success) {
+      throw new Error(result.error || `HTTP ${res.status}`);
     }
+
+    console.log('Saved masterdasboard to game:', sessionId);
+    return true;
+  } catch (err: any) {
+    console.error('PB Save Failed:', err.message);
+    throw err;
   }
 }
 
