@@ -533,27 +533,27 @@ export default function DashboardPage() {
       setCurrentSession(createdSession);
       setSessions(prev => [createdSession, ...prev]);
       
-      // Load the master config from the newly created game
+      // Load the master config from the newly created game (may have copied config from existing game)
       try {
         console.log('Loading config for new game:', sessionData.id);
         const res = await fetch(`/api/dashboard/session?id=${sessionData.id}`);
         const sessionData2 = await res.json();
         console.log('New game config loaded:', sessionData2);
-          if (sessionData2?.masterdasboard) {
+        if (sessionData2?.masterdasboard) {
           const normalized = normalizeGamedata(sessionData2.masterdasboard);
           console.log('Normalized new game data:', normalized);
           if (normalized) {
             setData(normalized);
-            showStatus(`✅ Nieuwe game gestart in ${newSession.city} (${newSession.activeVariant})! Config geladen.`, 'success');
+            showStatus(`✅ Nieuwe game gestart in ${newSession.city} (${newSession.activeVariant})!`, 'success');
           } else {
-            showStatus(`⚠️ Game aangemaakt maar config format is ongeldig`, 'error');
+            showStatus(`✅ Nieuwe game gestart in ${newSession.city}! (lege template)`, 'success');
           }
         } else {
-          showStatus(`⚠️ Game aangemaakt maar geen config gevonden`, 'error');
+          showStatus(`✅ Nieuwe game gestart in ${newSession.city}! (lege template)`, 'success');
         }
       } catch (err) {
         console.error('Failed to load new game config:', err);
-        showStatus(`⚠️ Game aangemaakt maar config laden mislukt`, 'error');
+        showStatus(`✅ Nieuwe game gestart in ${newSession.city}!`, 'success');
       }
     } catch (err: any) {
       // PB is required - show error and re-throw so popup knows it failed
@@ -938,7 +938,6 @@ export default function DashboardPage() {
                 <Field label="Heading"     value={loc.heading}    onChange={v => updateLoc('heading', v)}    />
                 <Field label="Sub Heading" value={loc.subheading} onChange={v => updateLoc('subheading', v)} />
                 <Field label="Body"        value={loc.body}       onChange={v => updateLoc('body', v)} area  />
-                <Field label="Map URL"     value={loc.mapUrl ?? ''} onChange={v => updateLoc('mapUrl', v)} />
                 <Field label="Plus Code (Google Open Location Code)" value={loc.plusCode ?? ''} onChange={v => updateLoc('plusCode', v)} placeholder="e.g., 9F4W9C8C+W4" />
                 <Field label="Verificatie Antwoord" value={loc.verificationAnswer ?? ''} onChange={v => updateLoc('verificationAnswer', v)} highlight />
                 <CheckboxField label="SKIP" checked={!!loc.skip}  onChange={v => updateLoc('skip', v)}       />
