@@ -532,8 +532,29 @@ export default function DashboardPage() {
       };
       setCurrentSession(createdSession);
       setSessions(prev => [createdSession, ...prev]);
-      showStatus(`✅ Nieuwe game gestart in ${newSession.city} (${newSession.activeVariant})!`, 'success');
-      // Success - resolve promise
+      
+      // Load the master config from the newly created game
+      try {
+        console.log('Loading config for new game:', sessionData.id);
+        const res = await fetch(`/api/dashboard/session?id=${sessionData.id}`);
+        const sessionData2 = await res.json();
+        console.log('New game config loaded:', sessionData2);
+        if (sessionData2?.masterdasboard) {
+          const normalized = normalizeGamedata(sessionData2.masterdasboard);
+          console.log('Normalized new game data:', normalized);
+          if (normalized) {
+            setData(normalized);
+            showStatus(`✅ Nieuwe game gestart in ${newSession.city} (${newSession.activeVariant})! Config geladen.`, 'success');
+          } else {
+            showStatus(`⚠️ Game aangemaakt maar config format is ongeldig`, 'warning');
+          }
+        } else {
+          showStatus(`⚠️ Game aangemaakt maar geen config gevonden`, 'warning');
+        }
+      } catch (err) {
+        console.error('Failed to load new game config:', err);
+        showStatus(`⚠️ Game aangemaakt maar config laden mislukt`, 'warning');
+      }
     } catch (err: any) {
       // PB is required - show error and re-throw so popup knows it failed
       console.error('PB Create Session Error:', err);
