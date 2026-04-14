@@ -217,10 +217,10 @@ export default function FlamePage() {
       {showWinPopup && (
         <div className="absolute inset-0 z-40 flex items-center justify-center bg-black/65 p-6">
           <div className="ge-popup-yellow flex flex-col items-center p-8 text-center" style={{ width: 280, minHeight: 200, borderRadius: 40 }}>
-            <p className="ge-popup__title">Jullie zijn de winnaar! 🏆</p>
+            <h1 className="ge-h1">Jullie zijn de winnaar! 🏆</h1>
             {winRank && <p className="ge-popup__meta">{winRank === 1 ? '🥇 1e Plek!' : winRank === 2 ? '🥈 2e Plek!' : `${winRank}e Plek`}</p>}
-            <p className="ge-popup__message mt-2 mb-6">{teamName} heeft de code gekraakt!</p>
-            <button className="ge-popup__ok" onClick={() => { window.location.href = '/watzullenwe'; }}>OK</button>
+            <p className="ge-popup__message mt-2 mb-8">{teamName} heeft de code gekraakt!</p>
+            <button className="ge-popup__ok mt-2" onClick={() => { window.location.href = '/eindscore'; }}>OK</button>
           </div>
         </div>
       )}
