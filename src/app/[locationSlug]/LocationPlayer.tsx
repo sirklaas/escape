@@ -237,7 +237,13 @@ export default function LocationPlayer({ locationSlug, atlasPhase }: LocationPla
   useEffect(() => {
     if (!atlasPhase) return;
     if (loading) return;
-    if (!data || !loc) return;
+    if (!data || !loc || !vData) return;
+
+    const locationPages = vData.pages
+      .filter((p) => p.locationNumber === loc.locationNumber)
+      .sort((a, b) => a.pageNumber - b.pageNumber);
+    const firstPage = locationPages[0]?.pageNumber;
+    const secondPage = locationPages[1]?.pageNumber;
 
     if (atlasPhase === 'locxx') {
       setStep('direction');
@@ -245,6 +251,7 @@ export default function LocationPlayer({ locationSlug, atlasPhase }: LocationPla
       setAlertState('none');
       setIsClosingAlert(false);
     } else if (atlasPhase === 'pageodd') {
+      if (firstPage !== undefined) setCurrentPageNumber(firstPage);
       setStep('puzzle');
       setNavPhase('maps');
       setAlertState('none');
@@ -252,7 +259,9 @@ export default function LocationPlayer({ locationSlug, atlasPhase }: LocationPla
       setTimer(0);
       setChallengeTimer(0);
     } else if (atlasPhase === 'pageeven') {
-      /* Same base as pageodd — no success popup on load (QA layout without modal). */
+      // Use the next page for "even" view so it does not duplicate "odd" content.
+      if (secondPage !== undefined) setCurrentPageNumber(secondPage);
+      else if (firstPage !== undefined) setCurrentPageNumber(firstPage);
       setStep('puzzle');
       setNavPhase('maps');
       setAlertState('none');
@@ -260,7 +269,7 @@ export default function LocationPlayer({ locationSlug, atlasPhase }: LocationPla
       setTimer(0);
       setChallengeTimer(0);
     }
-  }, [atlasPhase, loading, data, loc]);
+  }, [atlasPhase, loading, data, loc, vData]);
 
   useEffect(() => {
     if (atlasPhase === 'pageeven') return;
@@ -679,8 +688,8 @@ export default function LocationPlayer({ locationSlug, atlasPhase }: LocationPla
         </div>
       </PhoneWrapper>
 
-      {/* Dev navigation for game-atlas routes */}
-      <IntroFlowDevNav gameAtlasPhase={atlasPhase} />
+      {/* Dev navigation - now uses total atlas */}
+      <IntroFlowDevNav />
     </>
   );
 }

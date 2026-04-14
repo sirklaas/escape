@@ -3,7 +3,6 @@
 import { Suspense, useEffect, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import PlayerChrome from '@/components/PlayerChrome';
-import { readVulinSolved } from '@/lib/vulin-flow';
 import { fetchEscapeData } from '@/lib/pb';
 import {
   GAME_ATLAS_LOCATION_SLUG,
@@ -13,60 +12,48 @@ import { slugOrderIndex } from '@/lib/location-slugs';
 
 /**
  * Token A (first earned token) — video from PB `nextPage` for the atlas location.
- * Intro: `/vulin` → `/122` → `/toka`. Game-atlas QA: `/toka?atlas=1` skips the vulin gate.
  */
 function TokaContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const atlas = searchParams.get('atlas') === '1';
-  const [allowed, setAllowed] = useState(false);
   const [videoSrc, setVideoSrc] = useState('/videos/tokenA.mp4');
 
   useEffect(() => {
-    if (atlas) {
-      let cancelled = false;
-      (async () => {
-        try {
-          const pbData = await fetchEscapeData();
-          if (pbData && !cancelled) {
-            const variant = pbData.activeVariant || 'city';
-            const vData = pbData[variant];
-            const slugLower = GAME_ATLAS_LOCATION_SLUG.toLowerCase();
-            const locationOrdinal = slugOrderIndex(slugLower) + 1;
-            const loc = vData?.locations.find(
-              (l) =>
-                l.locationNumber === locationOrdinal ||
-                l.name?.toLowerCase() === slugLower ||
-                l.mapUrl?.toLowerCase().includes(slugLower)
-            );
-            if (loc) {
-              const locPages = vData.pages.filter((p) => p.locationNumber === loc.locationNumber);
-              if (locPages.length > 0) {
-                const firstPageNum = Math.min(...locPages.map((p) => p.pageNumber));
-                const page = locPages.find((p) => p.pageNumber === firstPageNum);
-                if (page?.nextPage) {
-                  setVideoSrc(tokenVideoSrcFromNextPageUrl(page.nextPage));
-                }
+    let cancelled = false;
+    (async () => {
+      try {
+        const pbData = await fetchEscapeData();
+        if (pbData && !cancelled) {
+          const variant = pbData.activeVariant || 'city';
+          const vData = pbData[variant];
+          const slugLower = GAME_ATLAS_LOCATION_SLUG.toLowerCase();
+          const locationOrdinal = slugOrderIndex(slugLower) + 1;
+          const loc = vData?.locations.find(
+            (l) =>
+              l.locationNumber === locationOrdinal ||
+              l.name?.toLowerCase() === slugLower ||
+              l.mapUrl?.toLowerCase().includes(slugLower)
+          );
+          if (loc) {
+            const locPages = vData.pages.filter((p) => p.locationNumber === loc.locationNumber);
+            if (locPages.length > 0) {
+              const firstPageNum = Math.min(...locPages.map((p) => p.pageNumber));
+              const page = locPages.find((p) => p.pageNumber === firstPageNum);
+              if (page?.nextPage) {
+                setVideoSrc(tokenVideoSrcFromNextPageUrl(page.nextPage));
               }
             }
           }
-        } catch {
-          /* default tokenA */
         }
-        if (!cancelled) setAllowed(true);
-      })();
-      return () => {
-        cancelled = true;
-      };
-    }
-    if (!readVulinSolved()) {
-      router.replace('/vulin');
-      return;
-    }
-    setAllowed(true);
-  }, [router, atlas]);
-
-  if (!allowed) return null;
+      } catch {
+        /* default tokenA */
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   return (
     <PlayerChrome backgroundImage="/Escapebackdrop.jpg" wrapWithActionContainer={false}>

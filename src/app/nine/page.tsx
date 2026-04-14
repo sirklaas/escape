@@ -52,7 +52,7 @@ export default function ChallengeSelection() {
                   type="button"
                   onClick={() => {
                     if (!isPlayed) {
-                      window.location.href = `/${loc.slug}`;
+                      window.location.href = `/locxx?location=${encodeURIComponent(loc.slug)}`;
                     }
                   }}
                   className={`

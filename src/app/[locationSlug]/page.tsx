@@ -6,6 +6,7 @@ import { fetchEscapeData, type EscapeData, type GameVariant, type EscapePage, ty
 import { getLeaderboardData, type LeaderboardEntry } from '@/app/actions';
 import { Loader2 } from 'lucide-react';
 import PhoneWrapper from '@/components/PhoneWrapper';
+import IntroFlowDevNav from '@/components/IntroFlowDevNav';
 
 const GAME_SETTINGS = {
   hintButtonAppearTime: 120,
@@ -461,9 +462,16 @@ export default function PlayerPage({ params }: { params: Promise<{ locationSlug:
                     ref={videoRef} 
                     src={(() => {
                       const url = currentPageData?.nextPage || '';
+                      if (url.includes('/tokf/')) return "/videos/TOKEN F.mp4";
+                      if (url.includes('/tokl/')) return "/videos/tokenL.mp4";
                       if (url.includes('/toka/')) return "/videos/tokenA.mp4";
+                      if (url.includes('/tokm/')) return "/videos/tokenM.mp4";
                       if (url.includes('/toke/')) return "/videos/tokenE.mp4";
+                      if (url.includes('/tokt/')) return "/videos/tokenT.mp4";
                       if (url.includes('/tokh/')) return "/videos/tokenH.mp4";
+                      if (url.includes('/tokr/')) return "/videos/tokenR.mp4";
+                      if (url.includes('/toko/')) return "/videos/tokenO.mp4";
+                      if (url.includes('/tokw/')) return "/videos/tokenW.mp4";
                       return "/videos/tokenA.mp4";
                     })()} 
                     playsInline 
@@ -507,6 +515,9 @@ export default function PlayerPage({ params }: { params: Promise<{ locationSlug:
           </div>
         </div>
       </PhoneWrapper>
+
+      {/* Dev navigation */}
+      <IntroFlowDevNav />
     </>
   );
 }

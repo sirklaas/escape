@@ -25,9 +25,16 @@ export type GameAtlasPath = (typeof GAME_ATLAS_PATHS)[number];
 
 /** Same mapping as `LocationPlayer` video step — PB `nextPage` URL → bundled asset. */
 export function tokenVideoSrcFromNextPageUrl(url: string): string {
+  if (url.includes('/tokf/')) return '/videos/TOKEN F.mp4';
+  if (url.includes('/tokl/')) return '/videos/tokenL.mp4';
   if (url.includes('/toka/')) return '/videos/tokenA.mp4';
+  if (url.includes('/tokm/')) return '/videos/tokenM.mp4';
   if (url.includes('/toke/')) return '/videos/tokenE.mp4';
+  if (url.includes('/tokt/')) return '/videos/tokenT.mp4';
   if (url.includes('/tokh/')) return '/videos/tokenH.mp4';
+  if (url.includes('/tokr/')) return '/videos/tokenR.mp4';
+  if (url.includes('/toko/')) return '/videos/tokenO.mp4';
+  if (url.includes('/tokw/')) return '/videos/tokenW.mp4';
   return '/videos/tokenA.mp4';
 }
 
