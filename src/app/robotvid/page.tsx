@@ -1,21 +1,31 @@
 'use client';
 
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import PlayerChrome from '@/components/PlayerChrome';
 
-type VideoPhase = 'idle' | 'playing' | 'ended';
+type VideoPhase = 'idle' | 'playing';
 
 /** Static route: `/robotvid` (wins over `[locationSlug]`). */
 export default function RobotVidPage() {
   const videoRef = useRef<HTMLVideoElement>(null);
+  const continueTimerRef = useRef<number | null>(null);
   const [phase, setPhase] = useState<VideoPhase>('idle');
+  const [canContinue, setCanContinue] = useState(false);
+
+  useEffect(() => {
+    return () => {
+      if (continueTimerRef.current) {
+        window.clearTimeout(continueTimerRef.current);
+      }
+    };
+  }, []);
 
   const continueToTeam = () => {
-    window.location.href = '/naam';
+    window.location.href = '/teamnaam';
   };
 
   const handleFootClick = () => {
-    if (phase === 'ended') {
+    if (canContinue) {
       continueToTeam();
       return;
     }
@@ -23,6 +33,9 @@ export default function RobotVidPage() {
     if (!el || phase === 'playing') return;
     el.muted = false;
     setPhase('playing');
+    continueTimerRef.current = window.setTimeout(() => {
+      setCanContinue(true);
+    }, 2000);
     void el.play();
   };
 
@@ -39,7 +52,7 @@ export default function RobotVidPage() {
             className="max-h-full w-full max-w-[min(100%,360px)] object-contain"
             playsInline
             preload="metadata"
-            onEnded={() => setPhase('ended')}
+            onEnded={continueToTeam}
           >
             <source src="/videos/elonRobotSquare.mp4" type="video/mp4" />
           </video>
@@ -48,10 +61,9 @@ export default function RobotVidPage() {
           <button
             type="button"
             onClick={handleFootClick}
-            disabled={phase === 'playing'}
-            className="ge-btn-blue ge-btn-blue--foot disabled:cursor-not-allowed disabled:opacity-60"
+            className="ge-btn-blue ge-btn-blue--foot"
           >
-            {phase === 'ended' ? 'Ga verder' : 'Start video'}
+            {canContinue ? 'Ga verder' : 'Start video'}
           </button>
         </div>
       </div>

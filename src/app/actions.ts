@@ -1,7 +1,60 @@
 "use server";
 
 import PocketBase from 'pocketbase';
-import { PB_URL, PB_TEAM_ROWS_FILTER, PB_TEAM_SESSION_CITY, isPocketBaseSkipped } from '@/lib/pb';
+import { PB_URL, PB_TEAM_SESSION_CITY, isPocketBaseSkipped, normalizeGamedata, type EscapeData } from '@/lib/pb';
+import { LOCATION_SLUG_ORDER } from '@/lib/location-slugs';
+
+const PB_SCORES_COLLECTION = 'escape_player_scores';
+
+type PagePhaseTimes = { odd: number; even: number };
+
+function toPositiveNumber(value: unknown, fallback: number): number {
+  const n = typeof value === 'number' ? value : Number(value);
+  return Number.isFinite(n) && n > 0 ? n : fallback;
+}
+
+function getDefaultLocationData(
+  masterdasboard: unknown,
+  activeGameId: string | null,
+  activeGameCity: string,
+): {
+  activeGameId: string | null;
+  activeGameCity: string;
+  playedLocations: string[];
+  times: Record<string, number>;
+  pageBudgets: Record<string, PagePhaseTimes>;
+  pageTimes: Record<string, PagePhaseTimes>;
+} {
+  const normalized = normalizeGamedata(masterdasboard);
+  const activeVariant = normalized?.activeVariant ?? 'city';
+  const variantData = (normalized as EscapeData | null)?.[activeVariant];
+  const pages = variantData?.pages ?? [];
+
+  const pageBudgets: Record<string, PagePhaseTimes> = {};
+  const pageTimes: Record<string, PagePhaseTimes> = {};
+
+  LOCATION_SLUG_ORDER.forEach((slug, idx) => {
+    const locationNumber = idx + 1;
+    const locationPages = pages
+      .filter((p) => p.locationNumber === locationNumber)
+      .sort((a, b) => a.pageNumber - b.pageNumber);
+
+    const oddDefault = toPositiveNumber(locationPages[0]?.timerLimit, 600);
+    const evenDefault = toPositiveNumber(locationPages[1]?.timerLimit, oddDefault);
+
+    pageBudgets[slug] = { odd: oddDefault, even: evenDefault };
+    pageTimes[slug] = { odd: oddDefault, even: evenDefault };
+  });
+
+  return {
+    activeGameId,
+    activeGameCity,
+    playedLocations: [],
+    times: {},
+    pageBudgets,
+    pageTimes,
+  };
+}
 
 export type LeaderboardEntry = {
   teamName: string;
@@ -17,35 +70,40 @@ export async function getLeaderboardData(): Promise<LeaderboardEntry[]> {
     // Authenticate securely on the server using the master credentials provided in the legacy file
     // await pb.admins.authWithPassword("klaas@republick.nl", "biknu8-pyrnaB-mytvyx");
 
-    // Pull every tracking row marked as a team session
-    const records = await pb.collection('escape_game_data').getFullList({
-      filter: PB_TEAM_ROWS_FILTER,
-    });
+    // Pull team score rows from dedicated score collection.
+    const records = await pb.collection(PB_SCORES_COLLECTION).getFullList({ requestKey: null });
 
     const entries: LeaderboardEntry[] = [];
 
     for (const record of records) {
-      if (!record.gamedata) continue;
-      
-      const gamedata = typeof record.gamedata === 'string' ? JSON.parse(record.gamedata) : record.gamedata;
-      const playedLocations: string[] = gamedata?.playedLocations || [];
-      const times: Record<string, number> = gamedata?.times || {};
+      const locationData =
+        typeof record.location_data === 'string'
+          ? JSON.parse(record.location_data)
+          : record.location_data ?? {};
+      const playedLocations: string[] = locationData?.playedLocations || [];
+      const times: Record<string, number> = locationData?.times || {};
+      const pageTimes: Record<string, { odd?: number; even?: number }> = locationData?.pageTimes || {};
       
       let totalTime = 0;
-      let playedCount = 0;
-
-      // Extract the exact time spent per completed game
-      for (const [slug, time] of Object.entries(times)) {
-        if (playedLocations.includes(slug)) {
-          totalTime += time as number;
-          playedCount++;
+      const hasPageTimes = pageTimes && Object.keys(pageTimes).length > 0;
+      if (hasPageTimes) {
+        for (const phaseTimes of Object.values(pageTimes)) {
+          totalTime += toPositiveNumber(phaseTimes?.odd, 0);
+          totalTime += toPositiveNumber(phaseTimes?.even, 0);
         }
-      }
-
-      // Legacy Rule: Apply exactly 2500 seconds penalty for any of the 9 games left unfinished
-      const unplayedCount = 9 - playedCount;
-      if (unplayedCount > 0) {
-        totalTime += (unplayedCount * 2500);
+      } else {
+        // Backward compatibility with legacy location totals.
+        let playedCount = 0;
+        for (const [slug, time] of Object.entries(times)) {
+          if (playedLocations.includes(slug)) {
+            totalTime += time as number;
+            playedCount++;
+          }
+        }
+        const unplayedCount = 9 - playedCount;
+        if (unplayedCount > 0) {
+          totalTime += (unplayedCount * 2500);
+        }
       }
 
       entries.push({
@@ -71,7 +129,7 @@ export async function checkTeamExistsAction(teamName: string): Promise<boolean> 
   const pb = new PocketBase(PB_URL);
   try {
     // await pb.admins.authWithPassword("klaas@republick.nl", "biknu8-pyrnaB-mytvyx");
-    const record = await pb.collection('escape_game_data').getFirstListItem(`team_name = "${teamName}"`, { requestKey: null });
+    const record = await pb.collection(PB_SCORES_COLLECTION).getFirstListItem(`team_name = "${teamName}"`, { requestKey: null });
     return !!record;
   } catch (err) {
     return false;
@@ -84,9 +142,9 @@ export async function getLastSavedTeamAction(): Promise<string | null> {
   const pb = new PocketBase(PB_URL);
   try {
     // await pb.admins.authWithPassword("klaas@republick.nl", "biknu8-pyrnaB-mytvyx");
-    const records = await pb.collection('escape_game_data').getList(1, 1, {
+    const records = await pb.collection(PB_SCORES_COLLECTION).getList(1, 1, {
       sort: '-created',
-      filter: PB_TEAM_ROWS_FILTER,
+      requestKey: null,
     });
     if (records.items.length > 0) {
       return records.items[0].team_name;
@@ -106,30 +164,46 @@ export async function initializeTeamAction(teamName: string): Promise<{ success:
   const pb = new PocketBase(PB_URL);
   try {
     // await pb.admins.authWithPassword("klaas@republick.nl", "biknu8-pyrnaB-mytvyx");
+
+    let activeGameId: string | null = null;
+    let activeGameCity = PB_TEAM_SESSION_CITY;
+    let activeGameDurationMinutes = 90;
+    let activeGameMasterdasboard: unknown = null;
+    try {
+      const activeGame = await pb.collection('escape_game_data').getFirstListItem('priority=1', { requestKey: null });
+      activeGameId = activeGame.id;
+      if (typeof activeGame.city === 'string' && activeGame.city.trim()) {
+        activeGameCity = activeGame.city.trim();
+      }
+      activeGameMasterdasboard = activeGame.masterdasboard ?? null;
+      const gameMeta = typeof activeGame.gamedata === 'string' ? JSON.parse(activeGame.gamedata) : activeGame.gamedata ?? {};
+      activeGameDurationMinutes = toPositiveNumber(gameMeta?.gameDurationLimit, 90);
+    } catch {
+      // Fallback to PB_TEAM_SESSION_CITY when no active game is available.
+    }
     
     // Check if team name already exists
     try {
-      const record = await pb.collection('escape_game_data').getFirstListItem(`team_name = "${teamName}"`);
+      const record = await pb.collection(PB_SCORES_COLLECTION).getFirstListItem(`team_name = "${teamName}"`, { requestKey: null });
       if (record) return { success: false, message: 'Deze teamnaam bestaat al. Wees creatief en kies een andere naam.' };
     } catch (err) {
        // record not found, continue
     }
 
-    // Initialize with empty gamedata for a new session
+    // Initialize score row for this team in dedicated score collection.
     const data = {
       team_name: teamName,
-      gamedata: JSON.stringify({
-        playedLocations: [],
-        times: {},
-      }),
-      nr_teams: 1,
-      city: PB_TEAM_SESSION_CITY,
-      total_time: Date.now(),
-      current_page: 0,
-      challenge_timer: 0,
+      players: {
+        playerNames: [],
+      },
+      location_data: getDefaultLocationData(activeGameMasterdasboard, activeGameId, activeGameCity),
+      city: activeGameCity,
+      flame_completed: false,
+      time_left: activeGameDurationMinutes,
+      start: '',
     };
     
-    await pb.collection('escape_game_data').create(data);
+    await pb.collection(PB_SCORES_COLLECTION).create(data);
     return { success: true };
   } catch (err) {
     console.error("Failed to initialize team:", err);
@@ -146,13 +220,12 @@ export async function updatePlayerNamesAction(teamName: string, playerNames: str
   try {
     // await pb.admins.authWithPassword("klaas@republick.nl", "biknu8-pyrnaB-mytvyx");
     
-    const record = await pb.collection('escape_game_data').getFirstListItem(`team_name = "${teamName}"`);
-    const currentGamedata = typeof record.gamedata === 'string' ? JSON.parse(record.gamedata) : record.gamedata;
+    const record = await pb.collection(PB_SCORES_COLLECTION).getFirstListItem(`team_name = "${teamName}"`, { requestKey: null });
+    const currentPlayers = typeof record.players === 'string' ? JSON.parse(record.players) : record.players ?? {};
+    currentPlayers.playerNames = playerNames;
     
-    currentGamedata.playerNames = playerNames;
-    
-    await pb.collection('escape_game_data').update(record.id, {
-      gamedata: JSON.stringify(currentGamedata)
+    await pb.collection(PB_SCORES_COLLECTION).update(record.id, {
+      players: currentPlayers
     });
     return true;
   } catch (err) {
@@ -171,38 +244,36 @@ export async function markFlameWinnerAction(
   const pb = new PocketBase(PB_URL);
   try {
     // Fetch the team record
-    const record = await pb.collection('escape_game_data').getFirstListItem(
+    const record = await pb.collection(PB_SCORES_COLLECTION).getFirstListItem(
       `team_name = "${teamName}"`,
       { requestKey: null }
     );
-    const gamedata =
-      typeof record.gamedata === 'string'
-        ? JSON.parse(record.gamedata)
-        : record.gamedata ?? {};
+    const locationData =
+      typeof record.location_data === 'string'
+        ? JSON.parse(record.location_data)
+        : record.location_data ?? {};
 
-    gamedata.flameCompleted = true;
-    gamedata.flameCompletedAt = Date.now();
+    locationData.flameCompletedAt = Date.now();
 
-    await pb.collection('escape_game_data').update(record.id, {
-      gamedata: JSON.stringify(gamedata),
+    await pb.collection(PB_SCORES_COLLECTION).update(record.id, {
+      location_data: locationData,
+      flame_completed: true,
     });
 
     // Determine rank: how many teams have already completed flame before us?
-    const allRecords = await pb
-      .collection('escape_game_data')
-      .getFullList({ filter: PB_TEAM_ROWS_FILTER, requestKey: null });
+    const allRecords = await pb.collection(PB_SCORES_COLLECTION).getFullList({ requestKey: null });
 
     const completedTimes = allRecords
       .map((r) => {
-        const gd =
-          typeof r.gamedata === 'string' ? JSON.parse(r.gamedata) : r.gamedata ?? {};
-        return gd.flameCompleted ? (gd.flameCompletedAt as number) : null;
+        const ld =
+          typeof r.location_data === 'string' ? JSON.parse(r.location_data) : r.location_data ?? {};
+        return r.flame_completed ? (ld.flameCompletedAt as number) : null;
       })
       .filter((t): t is number => t !== null)
       .sort((a, b) => a - b);
 
     const rank =
-      completedTimes.indexOf(gamedata.flameCompletedAt as number) + 1 || 1;
+      completedTimes.indexOf(locationData.flameCompletedAt as number) + 1 || 1;
 
     return { success: true, rank };
   } catch (err) {

@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useState } from 'react';
 import PlayerChrome from '@/components/PlayerChrome';
+import { updatePlayerNamesAction } from '@/app/actions';
 
 const MAX_PLAYERS = 15;
 
@@ -42,16 +43,20 @@ type Phase = 'count' | 'names';
 /** `/players` — na team; teamnaam later van PB / nu localStorage. */
 export default function PlayersPage() {
   const [phase, setPhase] = useState<Phase>('count');
-  const [teamName, setTeamName] = useState('…');
+  const [teamName] = useState(() => {
+    if (typeof window === 'undefined') return '…';
+    const t = localStorage.getItem('escaperoomTeamName');
+    return t && t.trim() ? t.trim() : '…';
+  });
   const [countRaw, setCountRaw] = useState('');
   const [playerCount, setPlayerCount] = useState(0);
   const [currentSlot, setCurrentSlot] = useState(0);
   const [playerNames, setPlayerNames] = useState<string[]>([]);
-
-  useEffect(() => {
-    const t = localStorage.getItem('escaperoomTeamName');
-    if (t && t.trim()) setTeamName(t.trim());
-  }, []);
+  const [isSavingPlayers, setIsSavingPlayers] = useState(false);
+  const [saveError, setSaveError] = useState('');
+  const [showSummaryPopup, setShowSummaryPopup] = useState(false);
+  const [isClosingSummaryPopup, setIsClosingSummaryPopup] = useState(false);
+  const [didNavigateAfterPopup, setDidNavigateAfterPopup] = useState(false);
 
   const parsedCount = Math.min(MAX_PLAYERS, Math.max(0, parseInt(countRaw, 10) || 0));
   const countValid = parsedCount >= 1 && parsedCount <= MAX_PLAYERS;
@@ -75,14 +80,43 @@ export default function PlayersPage() {
     });
   }, []);
 
+  const finalizePlayers = useCallback(async () => {
+    if (isSavingPlayers) return;
+    const normalizedNames = playerNames.map((n) => n.trim());
+    if (normalizedNames.some((n) => !n)) return;
+
+    setSaveError('');
+    setIsSavingPlayers(true);
+    const success = await updatePlayerNamesAction(teamName, normalizedNames);
+    setIsSavingPlayers(false);
+
+    if (!success) {
+      setSaveError('Opslaan van spelers is mislukt. Probeer opnieuw.');
+      return;
+    }
+
+    setDidNavigateAfterPopup(false);
+    setIsClosingSummaryPopup(false);
+    setShowSummaryPopup(true);
+  }, [isSavingPlayers, playerNames, teamName]);
+
   const advanceSlot = useCallback(() => {
-    if (phase !== 'names' || !currentHasName) return;
+    if (phase !== 'names' || !currentHasName || isSavingPlayers) return;
     if (currentSlot < playerCount - 1) {
       setCurrentSlot((s) => s + 1);
     } else {
-      window.location.href = '/begin';
+      void finalizePlayers();
     }
-  }, [phase, currentHasName, currentSlot, playerCount]);
+  }, [phase, currentHasName, isSavingPlayers, currentSlot, playerCount, finalizePlayers]);
+
+  useEffect(() => {
+    if (!isClosingSummaryPopup || didNavigateAfterPopup) return;
+    const fallback = window.setTimeout(() => {
+      setDidNavigateAfterPopup(true);
+      window.location.href = '/begin';
+    }, 2000);
+    return () => window.clearTimeout(fallback);
+  }, [isClosingSummaryPopup, didNavigateAfterPopup]);
 
   useEffect(() => {
     if (phase !== 'names' || playerCount < 1) return;
@@ -217,10 +251,44 @@ export default function PlayersPage() {
                 <button
                   type="button"
                   onClick={advanceSlot}
-                  disabled={!currentHasName}
+                  disabled={!currentHasName || isSavingPlayers}
                   className="ge-btn-blue ge-btn-blue--foot text-sm disabled:pointer-events-none disabled:opacity-45"
                 >
-                  Volgende
+                  {isSavingPlayers ? 'Bezig...' : 'Volgende'}
+                </button>
+              </div>
+              {saveError && <p className="ge-body px-4 pt-3 text-sm font-medium text-[#D62828]">{saveError}</p>}
+            </div>
+          )}
+          {showSummaryPopup && (
+            <div className="absolute inset-0 z-[70] flex items-center justify-center overflow-hidden p-4">
+              <div
+                className={[
+                  'ge-popup-yellow flex h-[280px] w-[280px] flex-col items-center text-center',
+                  isClosingSummaryPopup ? 'ge-popup-motion-down' : 'ge-popup-motion-up',
+                ].join(' ')}
+                onAnimationEnd={() => {
+                  if (!isClosingSummaryPopup || didNavigateAfterPopup) return;
+                  setDidNavigateAfterPopup(true);
+                  window.location.href = '/begin';
+                }}
+              >
+                <h1 className="ge-h1">{teamName}</h1>
+                <p className="ge-popup__message mt-2">In jullie team zitten deze kanjers:</p>
+                <div className="mt-2 flex min-h-0 w-full flex-1 flex-col gap-1 overflow-y-auto px-4">
+                  {playerNames.map((name, idx) => (
+                    <p key={`${name}-${idx}`} className="ge-popup__message">
+                      {name.trim()}
+                    </p>
+                  ))}
+                </div>
+                <button
+                  type="button"
+                  className="ge-popup__ok mt-4"
+                  disabled={isClosingSummaryPopup}
+                  onClick={() => setIsClosingSummaryPopup(true)}
+                >
+                  OK
                 </button>
               </div>
             </div>

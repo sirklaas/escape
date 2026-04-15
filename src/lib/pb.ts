@@ -15,18 +15,19 @@ export const PB_TEAM_SESSION_CITY =
 
 /** Rows that participate in sessions / leaderboard — excludes the global game JSON row only. */
 export const PB_TEAM_ROWS_FILTER = 'team_name != "MASTER_DASHBOARD"';
+export const PB_SCORES_COLLECTION = 'escape_player_scores';
 
 /**
  * Design / offline: no PocketBase. Game JSON comes from `public/escapedata.json`.
  * - `NEXT_PUBLIC_SKIP_POCKETBASE=true` | `1` → skip PB (also in production)
  * - `NEXT_PUBLIC_SKIP_POCKETBASE=false` | `0` → use PB
- * - unset → skip only when `NODE_ENV === 'development'` (`next dev`)
+ * - unset → use PB (skip is now explicit opt-in)
  */
 export function isPocketBaseSkipped(): boolean {
   const v = process.env.NEXT_PUBLIC_SKIP_POCKETBASE?.toLowerCase();
   if (v === '1' || v === 'true' || v === 'yes') return true;
   if (v === '0' || v === 'false' || v === 'no') return false;
-  return process.env.NODE_ENV === 'development';
+  return false;
 }
 
 let pb: PocketBase | null = null;
@@ -169,8 +170,9 @@ export async function fetchEscapeData(): Promise<EscapeData | null> {
     const remote = normalizeGamedata(record.masterdasboard);
     console.log('Normalized masterdasboard data:', remote);
     if (remote) return remote;
-  } catch (err: any) {
-    console.error('PB Fetch Failed:', err.message);
+  } catch (err) {
+    const message = err instanceof Error ? err.message : String(err);
+    console.error('PB Fetch Failed:', message);
   }
 
   console.log('Falling back to bundled data');
@@ -207,8 +209,9 @@ export async function saveEscapeData(data: EscapeData, sessionId?: string): Prom
 
     console.log('Saved masterdasboard to game:', sessionId);
     return true;
-  } catch (err: any) {
-    console.error('PB Save Failed:', err.message);
+  } catch (err) {
+    const message = err instanceof Error ? err.message : String(err);
+    console.error('PB Save Failed:', message);
     throw err;
   }
 }
@@ -219,6 +222,52 @@ export interface TeamProgress {
   playedLocations: string[];
   times: Record<string, number>;
   playerNames?: string[];
+  locationData?: TeamLocationData;
+}
+
+export type LocationPhase = 'odd' | 'even';
+
+export interface TeamLocationPhaseTimes {
+  odd: number;
+  even: number;
+}
+
+export interface TeamLocationData {
+  activeGameId: string | null;
+  activeGameCity: string;
+  playedLocations: string[];
+  times: Record<string, number>;
+  pageBudgets: Record<string, TeamLocationPhaseTimes>;
+  pageTimes: Record<string, TeamLocationPhaseTimes>;
+}
+
+function toPositiveNumber(value: unknown, fallback: number): number {
+  const n = typeof value === 'number' ? value : Number(value);
+  return Number.isFinite(n) && n > 0 ? n : fallback;
+}
+
+function normalizeTeamLocationData(rawData: unknown): TeamLocationData {
+  const parsed = typeof rawData === 'string' ? JSON.parse(rawData) : rawData;
+  const asObj = (parsed && typeof parsed === 'object' ? parsed : {}) as Record<string, unknown>;
+  const activeGameId = typeof asObj.activeGameId === 'string' ? asObj.activeGameId : null;
+  const activeGameCity = typeof asObj.activeGameCity === 'string' ? asObj.activeGameCity : PB_TEAM_SESSION_CITY;
+  const playedLocations = Array.isArray(asObj.playedLocations) ? (asObj.playedLocations as string[]) : [];
+  const times = (asObj.times && typeof asObj.times === 'object' ? asObj.times : {}) as Record<string, number>;
+  const pageBudgets = (asObj.pageBudgets && typeof asObj.pageBudgets === 'object'
+    ? asObj.pageBudgets
+    : {}) as Record<string, TeamLocationPhaseTimes>;
+  const pageTimes = (asObj.pageTimes && typeof asObj.pageTimes === 'object'
+    ? asObj.pageTimes
+    : {}) as Record<string, TeamLocationPhaseTimes>;
+
+  return {
+    activeGameId,
+    activeGameCity,
+    playedLocations,
+    times,
+    pageBudgets,
+    pageTimes,
+  };
 }
 
 /**
@@ -232,18 +281,64 @@ export async function fetchTeamProgress(teamId: string): Promise<TeamProgress> {
 
   const pb = getPB();
   try {
-    const record = await pb.collection('escape_game_data').getFirstListItem(`team_name="${teamId}"`, { requestKey: null });
+    const record = await pb.collection(PB_SCORES_COLLECTION).getFirstListItem(`team_name="${teamId}"`, { requestKey: null });
     // PB might return a raw string or an object depending on column settings. Handle both gracefully.
-    const rawData = record.gamedata;
-    const parsedData = typeof rawData === 'string' ? JSON.parse(rawData) : rawData;
+    const parsedData = normalizeTeamLocationData(record.location_data);
+    const playersRaw = record.players;
+    const parsedPlayers = typeof playersRaw === 'string' ? JSON.parse(playersRaw) : playersRaw;
     
     return {
-      playedLocations: parsedData?.playedLocations || [],
-      times: parsedData?.times || {}
+      playedLocations: parsedData.playedLocations || [],
+      times: parsedData.times || {},
+      playerNames: parsedPlayers?.playerNames || [],
+      locationData: parsedData,
     };
-  } catch (err) {
+  } catch {
     // Safe default if the team record hasn't been created yet
     return { playedLocations: [], times: {} };
+  }
+}
+
+export async function markTeamStartIfUnset(teamId: string): Promise<boolean> {
+  if (isPocketBaseSkipped()) return true;
+  const pb = getPB();
+  try {
+    const record = await pb.collection(PB_SCORES_COLLECTION).getFirstListItem(`team_name="${teamId}"`, { requestKey: null });
+    const existingStart = typeof record.start === 'string' ? record.start : '';
+    if (existingStart.trim()) return true;
+    await pb.collection(PB_SCORES_COLLECTION).update(record.id, { start: new Date().toISOString() });
+    return true;
+  } catch (err) {
+    console.error('Failed to set team start time:', err);
+    return false;
+  }
+}
+
+export async function recordLocationPageTime(
+  teamId: string,
+  slug: string,
+  phase: LocationPhase,
+  secondsTaken: number,
+): Promise<boolean> {
+  if (isPocketBaseSkipped()) return true;
+  const pb = getPB();
+  try {
+    const record = await pb.collection(PB_SCORES_COLLECTION).getFirstListItem(`team_name="${teamId}"`, { requestKey: null });
+    const locationData = normalizeTeamLocationData(record.location_data);
+    const budget = locationData.pageBudgets[slug] || { odd: 600, even: 600 };
+    const current = locationData.pageTimes[slug] || { odd: budget.odd, even: budget.even };
+    const normalizedSeconds = toPositiveNumber(secondsTaken, phase === 'odd' ? budget.odd : budget.even);
+    current[phase] = normalizedSeconds;
+    locationData.pageTimes[slug] = current;
+    locationData.times[slug] = toPositiveNumber(current.odd, 0) + toPositiveNumber(current.even, 0);
+
+    await pb.collection(PB_SCORES_COLLECTION).update(record.id, {
+      location_data: locationData,
+    });
+    return true;
+  } catch (err) {
+    console.error('Failed to record page time:', err);
+    return false;
   }
 }
 
@@ -259,32 +354,42 @@ export async function markLocationCompleted(teamId: string, slug: string, second
   const pb = getPB();
   try {
     const current = await fetchTeamProgress(teamId);
+    const locationData = current.locationData ?? {
+      activeGameId: null,
+      activeGameCity: PB_TEAM_SESSION_CITY,
+      playedLocations: current.playedLocations,
+      times: current.times,
+      pageBudgets: {},
+      pageTimes: {},
+    };
     
-    if (!current.playedLocations.includes(slug)) {
-       current.playedLocations.push(slug);
+    if (!locationData.playedLocations.includes(slug)) {
+      locationData.playedLocations.push(slug);
     }
-    
-    // Increment or initialize the time tracking for this specific location
-    current.times[slug] = (current.times[slug] || 0) + secondsTaken;
+
+    const phaseTimes = locationData.pageTimes[slug];
+    const totalForLocation = phaseTimes
+      ? toPositiveNumber(phaseTimes.odd, 0) + toPositiveNumber(phaseTimes.even, 0)
+      : toPositiveNumber(secondsTaken, 0);
+    locationData.times[slug] = totalForLocation;
 
     const payload = {
       team_name: teamId,
-      gamedata: JSON.stringify(current),
-      nr_teams: 1,
-      city: PB_TEAM_SESSION_CITY,
-      total_time: Date.now(),
-      current_page: 0,
-      challenge_timer: 0,
+      location_data: locationData,
+      players: { playerNames: current.playerNames || [] },
+      city: locationData.activeGameCity || PB_TEAM_SESSION_CITY,
+      flame_completed: false,
+      time_left: 90,
+      start: '',
     };
 
     try {
-      const existing = await pb.collection('escape_game_data').getFirstListItem(`team_name="${teamId}"`);
-      await pb.collection('escape_game_data').update(existing.id, {
-        gamedata: JSON.stringify(current),
-        total_time: Date.now(),
+      const existing = await pb.collection(PB_SCORES_COLLECTION).getFirstListItem(`team_name="${teamId}"`);
+      await pb.collection(PB_SCORES_COLLECTION).update(existing.id, {
+        location_data: locationData,
       });
     } catch {
-      await pb.collection('escape_game_data').create(payload);
+      await pb.collection(PB_SCORES_COLLECTION).create(payload);
     }
     return true;
   } catch (err) {

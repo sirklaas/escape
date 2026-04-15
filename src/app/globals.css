@@ -479,6 +479,25 @@ html, body {
   transform: scale(0.96);
 }
 
+/* Reusable popup motion: always 2s up/down within container. */
+@keyframes ge-popup-up {
+  from { opacity: 0; transform: translateY(120%); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes ge-popup-down {
+  from { opacity: 1; transform: translateY(0); }
+  to { opacity: 0; transform: translateY(120%); }
+}
+
+.player-view .ge-popup-motion-up {
+  animation: ge-popup-up 2s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.player-view .ge-popup-motion-down {
+  animation: ge-popup-down 2s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
 @media (prefers-reduced-motion: reduce) {
   .player-view button.ge-btn-yellow,
   .player-view button.ge-btn-blue,
@@ -515,6 +534,14 @@ html, body {
   to { opacity: 0; transform: translateY(30px) scale(0.95); }
 }
 .player-view .animate-fluent-slide-down { animation: fluent-slide-down 2s cubic-bezier(0.16, 1, 0.3, 1); }
+
+@keyframes fluent-slide-down-offscreen {
+  from { opacity: 1; transform: translateY(0) scale(1); }
+  to { opacity: 0; transform: translateY(130%); }
+}
+.player-view .animate-fluent-slide-down-offscreen {
+  animation: fluent-slide-down-offscreen 1.2s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
 
 /* CMS — always full browser viewport; no player phone chrome (see globaldesign §2.4) */
 .dashboard-fullscreen {

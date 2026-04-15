@@ -25,6 +25,48 @@ async function getPBWithAuth() {
   return pb;
 }
 
+async function fetchPublicSessionsFallback() {
+  const endpoint = `${PB_URL}/api/collections/escape_game_data/records?perPage=50&sort=-created`;
+  const res = await fetch(endpoint, { cache: 'no-store' });
+  if (!res.ok) {
+    throw new Error(`PocketBase fallback failed with ${res.status}`);
+  }
+
+  const payload = await res.json();
+  const items = Array.isArray(payload?.items) ? payload.items : [];
+
+  const allSessions = items.map((rec: any) => {
+    let g: any = null;
+    if (typeof rec?.gamedata === 'string') {
+      try {
+        g = JSON.parse(rec.gamedata);
+      } catch {
+        g = null;
+      }
+    } else {
+      g = rec?.gamedata ?? null;
+    }
+
+    return {
+      id: rec?.id,
+      city: rec?.city || 'Onbekende Stad',
+      date: rec?.total_time ? new Date(rec.total_time).toISOString() : rec?.created,
+      nrPlayers: g?.nrPlayers || 0,
+      nrTeams: rec?.nr_teams || 0,
+      gameDurationLimit: g?.gameDurationLimit || 90,
+      priority: rec?.priority || 0,
+      activeVariant: rec?.variant || 'city',
+      created: rec?.created,
+      masterdasboard: rec?.masterdasboard || null,
+    };
+  });
+
+  const activeSession = allSessions.find((s: any) => s.priority === 1) || allSessions[0] || null;
+  const escapeData = activeSession?.masterdasboard || null;
+
+  return { allSessions, activeSession, escapeData };
+}
+
 export async function GET(req: NextRequest) {
   try {
     const pb = await getPBWithAuth();
@@ -56,9 +98,8 @@ export async function GET(req: NextRequest) {
 
     // 1. Fetch Master Dashboard Data from priority=1 game
     let escapeData = null;
-    let masterRecord = null;
     try {
-      masterRecord = await pb.collection('escape_game_data').getFirstListItem('priority=1', { requestKey: null });
+      const masterRecord = await pb.collection('escape_game_data').getFirstListItem('priority=1', { requestKey: null });
       escapeData = masterRecord.masterdasboard || null;
     } catch {
       /* no priority=1 game found */
@@ -107,7 +148,14 @@ export async function GET(req: NextRequest) {
       activeSession = allSessions.find(s => s.priority === 1) || allSessions[0] || null;
     } catch (err: any) {
       console.error('API: Error fetching sessions:', err.message);
-      /* no sessions found */
+      try {
+        const fallback = await fetchPublicSessionsFallback();
+        allSessions = fallback.allSessions;
+        activeSession = fallback.activeSession;
+        if (!escapeData) escapeData = fallback.escapeData;
+      } catch (fallbackErr: any) {
+        console.error('API: Fallback session fetch failed:', fallbackErr.message);
+      }
     }
 
     return NextResponse.json({

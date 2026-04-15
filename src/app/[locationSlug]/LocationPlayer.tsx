@@ -2,7 +2,16 @@
 
 import { useEffect, useState, useCallback, useRef } from 'react';
 import Link from 'next/link';
-import { fetchEscapeData, type EscapeData, type GameVariant, type EscapePage, type EscapeLocation, markLocationCompleted } from '@/lib/pb';
+import {
+  fetchEscapeData,
+  type EscapeData,
+  type GameVariant,
+  type EscapePage,
+  type EscapeLocation,
+  markLocationCompleted,
+  markTeamStartIfUnset,
+  recordLocationPageTime,
+} from '@/lib/pb';
 import { getLeaderboardData, type LeaderboardEntry } from '@/app/actions';
 import { Loader2 } from 'lucide-react';
 import PhoneWrapper from '@/components/PhoneWrapper';
@@ -89,6 +98,11 @@ export default function LocationPlayer({ locationSlug, atlasPhase }: LocationPla
   const [hintsRevealed, setHintsRevealed] = useState(0);
   const [showHintButton, setShowHintButton] = useState(false);
   const [answer, setAnswer] = useState('');
+  const [teamId] = useState(() => {
+    if (typeof window === 'undefined') return 'team_alpha';
+    const stored = localStorage.getItem('escaperoomTeamName');
+    return stored && stored.trim() ? stored.trim() : 'team_alpha';
+  });
   const [navPhase, setNavPhase] = useState<'maps' | 'verify'>('maps');
   const [alertState, setAlertState] = useState<'none' | 'correct' | 'wrong' | 'timeup' | 'hint'>('none');
   const [isClosingAlert, setIsClosingAlert] = useState(false);
@@ -274,6 +288,7 @@ export default function LocationPlayer({ locationSlug, atlasPhase }: LocationPla
   useEffect(() => {
     if (atlasPhase === 'pageeven') return;
     if (step === 'puzzle') {
+      void markTeamStartIfUnset(teamId);
       timerRef.current = setInterval(() => {
         setTimer(prev => prev + GAME_SETTINGS.timerIncrementInterval);
         setChallengeTimer(prev => prev + GAME_SETTINGS.timerIncrementInterval);
@@ -284,7 +299,7 @@ export default function LocationPlayer({ locationSlug, atlasPhase }: LocationPla
         clearTimeout(hintTimeout);
       };
     }
-  }, [step, currentPageNumber, atlasPhase]);
+  }, [step, currentPageNumber, atlasPhase, teamId]);
 
   useEffect(() => {
     if (atlasPhase === 'pageeven') return;
@@ -354,6 +369,15 @@ export default function LocationPlayer({ locationSlug, atlasPhase }: LocationPla
 
   /** Called after yellow popup has finished closing (2s) — alert already cleared in `closeAlert`. */
   const proceedNext = () => {
+    const locationPages = (vData?.pages || [])
+      .filter((p) => p.locationNumber === locNumber)
+      .sort((a, b) => a.pageNumber - b.pageNumber);
+    const currentPageIndex = locationPages.findIndex((p) => p.pageNumber === currentPageNumber);
+    const currentPhase = currentPageIndex === 0 ? 'odd' : currentPageIndex === 1 ? 'even' : null;
+    if (step === 'puzzle' && currentPhase) {
+      void recordLocationPageTime(teamId, locationSlug.toLowerCase(), currentPhase, timer);
+    }
+
     if (step === 'direction' || step === 'verify') {
       setStep('intro');
       setNavPhase('maps');
@@ -370,7 +394,7 @@ export default function LocationPlayer({ locationSlug, atlasPhase }: LocationPla
       setShowHintButton(false);
     } else {
       setStep('video');
-      markLocationCompleted('team_alpha', locationSlug.toLowerCase(), timer);
+      void markLocationCompleted(teamId, locationSlug.toLowerCase(), timer);
     }
   };
 

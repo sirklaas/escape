@@ -20,11 +20,16 @@ const LOCATIONS = [
 export default function ChallengeSelection() {
   const [playedLocations, setPlayedLocations] = useState<string[]>([]);
   const [mounted, setMounted] = useState(false);
+  const [teamId] = useState(() => {
+    if (typeof window === 'undefined') return 'team_alpha';
+    const stored = localStorage.getItem('escaperoomTeamName');
+    return stored && stored.trim() ? stored.trim() : 'team_alpha';
+  });
 
   useEffect(() => {
     async function initTeamProgress() {
       try {
-        const progress = await fetchTeamProgress('team_alpha');
+        const progress = await fetchTeamProgress(teamId);
         setPlayedLocations(progress.playedLocations || []);
       } catch (err) {
         console.error('Failed to load team progress from PB', err);
@@ -33,7 +38,7 @@ export default function ChallengeSelection() {
     }
 
     initTeamProgress();
-  }, []);
+  }, [teamId]);
 
   if (!mounted) return null;
 

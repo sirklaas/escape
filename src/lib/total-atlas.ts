@@ -7,7 +7,9 @@
  * Dev nav: Linear sequence showing each location's full puzzle flow
  *
  * Each location sequence: /locxx (with location context) → /od<location> → /even<location> → /leaderboard<location> → /tok<letter>
- * Tokens collected: F L A M E T H R O/W (9 letters for FLAMETHROWER)
+ * Tokens in this flow:
+ * - Intro gives A via /toka
+ * - Game locations give: F L W M E T H R O
  */
 
 export type AtlasPhase = 'intro' | 'game' | 'end';
@@ -49,12 +51,12 @@ export const TOTAL_ATLAS_STEPS: TotalAtlasStep[] = [
   { path: '/tokl', phase: 'game', title: 'tokl', description: 'Locatie 2: Token L video' },
   { path: '/nine', phase: 'game', title: 'nine-3', description: 'Terug naar keuze scherm' },
 
-  // GAME phase - Location 3: Electro (A token)
+  // GAME phase - Location 3: Electro (W token)
   { path: '/locxx', phase: 'game', title: 'locelectro', description: 'Locatie 3: Gekozen op /nine + map hint' },
   { path: '/pageodd', phase: 'game', title: 'odelectro', description: 'Locatie 3: Puzzel' },
   { path: '/pageeven', phase: 'game', title: 'evenelectro', description: 'Locatie 3: Succes' },
   { path: '/leaderboard', phase: 'game', title: 'leaderboardelectro', description: 'Locatie 3: Leaderboard' },
-  { path: '/toka', phase: 'game', title: 'toka', description: 'Locatie 3: Token A video' },
+  { path: '/tokw', phase: 'game', title: 'tokw', description: 'Locatie 3: Token W video' },
   { path: '/nine', phase: 'game', title: 'nine-4', description: 'Terug naar keuze scherm' },
 
   // GAME phase - Location 4: Lijst (M token)
@@ -97,13 +99,12 @@ export const TOTAL_ATLAS_STEPS: TotalAtlasStep[] = [
   { path: '/tokr', phase: 'game', title: 'tokr', description: 'Locatie 8: Token R video' },
   { path: '/nine', phase: 'game', title: 'nine-9', description: 'Terug naar keuze scherm' },
 
-  // GAME phase - Location 9: Drog (O/W tokens - 2 letters)
+  // GAME phase - Location 9: Drog (O token)
   { path: '/locxx', phase: 'game', title: 'locdrog', description: 'Locatie 9: Gekozen op /nine + map hint' },
   { path: '/pageodd', phase: 'game', title: 'oddrog', description: 'Locatie 9: Puzzel' },
   { path: '/pageeven', phase: 'game', title: 'evendrog', description: 'Locatie 9: Succes' },
   { path: '/leaderboard', phase: 'game', title: 'leaderboarddrog', description: 'Locatie 9: Leaderboard' },
   { path: '/toko', phase: 'game', title: 'toko', description: 'Locatie 9: Token O video' },
-  { path: '/tokw', phase: 'game', title: 'tokw', description: 'Locatie 9: Token W video' },
   { path: '/nine', phase: 'game', title: 'nine-10', description: 'Laatste terugkeer naar keuze scherm' },
 
   // END phase (6 steps) - finale after collecting all 9 tokens
